@@ -505,26 +505,20 @@ class Engine:
         "add optics to the exam prep list [thursday 6pm]" and
         "don't remind me about exam prep until monday"."""
         if parsed.get("pause_target"):
-            target = self.find_list(parsed["pause_target"])
+            until = parsed["pause_until"].isoformat()
+            target = self.pause_list(parsed["pause_target"], until)
             if target is None:
                 return None
-            until = parsed["pause_until"].isoformat()
-            note = self.set_list(target, quiet_until=until)
             row = N.get(self.conn, target)
-            return CaptureResult(note=note, path=row["path"], outcome=R.FILED,
+            return CaptureResult(note=self.vault.read(row["path"]), path=row["path"],
+                                 outcome=R.FILED,
                                  topic_path=T.path_of(self.conn, N.primary_topic(self.conn, target)),
                                  confidence=1.0, paused_until=until,
                                  matched=parsed.get("matched") or [])
         if parsed.get("append_item") and parsed.get("append_to"):
             due = parsed.get("due_at")
             remind = due.strftime("%Y-%m-%dT%H:%M:%S") if due else None
-            target = self.find_list(parsed["append_to"])
-            if target is None:
-                from .intent import list_title
-                made = self.create_note(title=list_title(parsed["append_to"]), body="",
-                                        kind="list")
-                target = made["id"]
-            self.add_to_list(target, text[:1].upper() + text[1:], remind=remind)
+            target = self.add_to_named_list(parsed["append_to"], text, remind=remind)
             row = N.get(self.conn, target)
             return CaptureResult(note=self.vault.read(row["path"]), path=row["path"],
                                  outcome=R.FILED, confidence=1.0, appended_to=target,
@@ -532,6 +526,24 @@ class Engine:
                                  due_at=remind, reminder=bool(remind),
                                  matched=parsed.get("matched") or [])
         return None
+
+    def add_to_named_list(self, name: str, item: str, remind: str | None = None) -> str:
+        """Add an item to the list `name` names, making that list if there's
+        none yet. Returns the list's id."""
+        target = self.find_list(name)
+        if target is None:
+            from .intent import list_title
+            target = self.create_note(title=list_title(name), body="", kind="list")["id"]
+        item = item.strip()
+        self.add_to_list(target, item[:1].upper() + item[1:], remind=remind)
+        return target
+
+    def pause_list(self, name: str, until: str) -> str | None:
+        """No check-ins from the list `name` names until `until` (a date)."""
+        target = self.find_list(name)
+        if target is not None:
+            self.set_list(target, quiet_until=until)
+        return target
 
     def find_list(self, phrase: str) -> str | None:
         """The to-do list "exam prep" names: a list whose title has those words,

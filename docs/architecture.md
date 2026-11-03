@@ -226,6 +226,25 @@ Starting the server makes one zip a day of the first profile, skips it if
 nothing changed, and keeps the last 7. The index is left out, since it's rebuilt
 from the notes.
 
+## To-do lists
+
+A to-do list is a note with `kind: list`. Its settings sit in the note's header
+(`due`, `checkin`, `quiet_until`, `repeat`, `parent`), and each item carries its
+own small marks at the end of its line, Obsidian Tasks style: `📅` a date, `⏰` a
+reminder, `🔁` a repeat, `✅` the day it was ticked. `mnemo/checklist.py` reads and
+writes them; the page mirrors those rules, and so do the capture box's chips.
+
+- **Saying it:** `intent.py` understands "exam prep list: … by 15 nov", "add … to
+  the … list [time]" and "don't remind me about … until …". Chat runs the same
+  phrases directly, and a tool-calling model gets `create_list`, `add_to_list`
+  and `pause_reminders`.
+- **The page:** a To-do lists view (rows or tiles), and inside a list a box with
+  the deadline, progress and pace, section counts, item chips with a bell, and
+  done items folded away. Pace wording is gentle on purpose.
+- **The AI box in a note** puts back any marks a rewrite drops.
+- **Not yet:** item reminders and daily check-ins are saved but don't alert;
+  that's roadmap step 4. Groups and repeating are step 5.
+
 ## Phones over Wi-Fi
 
 `start-notes.bat` runs `python -m mnemo serve --lan`. Plain `serve` stays on

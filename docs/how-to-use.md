@@ -12,6 +12,15 @@ Type anything in the box and press Enter. A thought, a link, a picture. The app 
 
 On your phone, tap **＋**. Your keyboard's mic button works there too.
 
+## To-do lists
+
+- Say **exam prep list: algebra, calculus by 15 nov**, or press **New list** on the **To-do lists** page.
+- Tick items on the list or right on its tile. Done ones fold away; tap **N done** to see them again.
+- Lines starting with `## ` make sections, each with its own count.
+- The deadline chip shows the days left and whether you're on track. Tap it to move the deadline.
+- The bell beside an item saves a time for it, shown as a small chip.
+- In the box or in chat, say **add optics to the exam prep list**.
+
 ## Finding things
 
 - **Today** shows what's due.

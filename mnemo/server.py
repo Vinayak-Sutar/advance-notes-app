@@ -783,6 +783,8 @@ class Handler(BaseHTTPRequestHandler):
                 "reminder": result.reminder,
                 "recurrence": result.recurrence,
                 "appendedTo": result.note.title if result.appended_to else None,
+                "listItems": result.list_items,
+                "pausedUntil": result.paused_until,
                 "appendCandidates": result.append_candidates,
                 "matched": result.matched,
                 "summary": result.summary(),
@@ -890,7 +892,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(engine.create_note(
                 title=payload.get("title") or "Untitled",
                 body=payload.get("body") or "",
-                topic_path=(payload.get("topic") or "").strip() or None))
+                topic_path=(payload.get("topic") or "").strip() or None,
+                kind="list" if payload.get("kind") == "list" else "note"))
 
         if route == "/api/note/file":
             if N.get(conn, payload.get("id") or "") is None:

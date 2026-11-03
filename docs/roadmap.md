@@ -18,8 +18,8 @@ What gets built next, in order. Wider ideas live in
    (`<computer-name>.local`) instead of its number, so a phone stays connected
    when the laptop rejoins the Wi-Fi. Test on iPhone and Android; fall back to
    reserving the address in the router.
-2. **Finish to-do lists.** A To-do lists page, the list layout, quick chips in
-   the capture box, and "add to my list" in chat.
+2. **Finish to-do lists.** Done 2026-11-03: the To-do lists page, the list
+   layout, capture chips, and lists in chat.
 3. **Links, as tiles.** See below.
 4. **Reminders and check-ins.** The reminders engine, daily check-ins ("unless
    I ask you not to until a date"), and the Today and Reminders pages.

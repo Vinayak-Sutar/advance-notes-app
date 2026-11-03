@@ -998,6 +998,31 @@ a.src-chip{text-decoration:none;color:inherit;max-width:240px}
 @media (max-width:1180px){:root{--sb-w:212px;--list-w:300px}.note-wrap{padding:28px 36px 100px}}
 .calm-motion *,.calm-motion *::before,.calm-motion *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 .calm-motion .caret{animation:none}
+/* To-do lists */
+.list-box{margin:4px 0 14px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface-2)}
+.lb-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.lb-prog,.list-prog{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600}
+.list-prog{gap:8px;margin-top:6px;font-size:12px;font-weight:500;color:var(--muted)}
+.lb-prog .bar,.list-prog .bar{flex:1;max-width:320px;height:6px;border-radius:3px;background:var(--border);overflow:hidden}
+.lb-prog .bar>span,.list-prog .bar>span{display:block;height:100%;border-radius:3px;background:var(--accent)}
+.lb-pace{margin:8px 0 0;font-size:13px;line-height:1.5;color:var(--muted)}
+.lb-pace b,.list-row .txt b{color:var(--text);font-weight:600}
+.lb-pace .btn{margin-left:8px}
+.list-foot{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 18px}
+.md-body.fold-done .b-check.done{display:none}
+.ichip{display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:0 7px;height:20px;border:1px solid var(--border);border-radius:var(--r-pill);background:var(--surface-2);font-size:11.5px;font-weight:500;line-height:1;color:var(--muted);vertical-align:2px;white-space:nowrap}
+.ichip.over{color:var(--danger);border-color:currentColor}
+.item-when{width:24px;height:24px;margin-left:4px;vertical-align:-4px;opacity:0}
+.b-check:hover .item-when,.item-when:focus-visible{opacity:1}
+@media (hover:none){.item-when{opacity:.7}}
+.sec-prog{margin-left:10px;font-size:12px;font-weight:600;letter-spacing:0;color:var(--muted);vertical-align:3px}
+.row-due{margin-left:auto;flex:none;font-size:12px;font-weight:600;color:var(--accent-ink)}
+.row-due.over{color:var(--danger)}
+.chat-md li.md-task{list-style:none;margin-left:-18px}
+.chat-md li.md-task.done{color:var(--muted);text-decoration:line-through}
+.list-acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
+.list-acts .view-switch{margin-top:0}
+
 /* =========================================================
    Phones: one screen at a time. All of it sits inside this rule, so the laptop
    layout doesn't change. The script uses the same query, in PHONE.
@@ -1363,7 +1388,9 @@ const api = {
   // writes
   capture:  (text)        => LIVE ? httpPost('/api/capture', { text, organise: settings().organise })    : mock.capture(text),
   upload:   (data, text)  => LIVE ? httpPost('/api/upload', { data, text, organise: settings().organise }) : mock.upload(data, text),
-  newNote:  (title, body, topic) => LIVE ? httpPost('/api/note/new', { title, body, topic: topic || undefined }) : mock.newNote(title, body, topic),
+  newNote:  (title, body, topic, kind) => LIVE ? httpPost('/api/note/new', { title, body, topic: topic || undefined, kind }) : mock.newNote(title, body, topic),
+  lists:    ()            => LIVE ? httpGet('/api/lists') : Promise.resolve({ lists: [] }),
+  listSettings: (p)       => LIVE ? httpPost('/api/list/settings', p) : Promise.resolve({ ok: true }),
   update:   (id, f)       => LIVE ? httpPost('/api/note/update', { id, ...f }) : mock.update(id, f),   // f: {title?, body?}
   append:   (id, text)    => LIVE ? httpPost('/api/note/append', { id, text }) : mock.append(id, text),
   schedule: (id, when, remind, snooze) => LIVE ? httpPost('/api/note/schedule', { id, when, remind, snooze }) : mock.schedule(id, when, remind),
@@ -1422,6 +1449,88 @@ const store = {
 const CHECK_LINE = /^(\s*)[-*+]\s+\[([ xX])\](?:\s+(.*))?$/;
 const ITEM_TOKEN = /\s*[📅⏰✅🔁]️?\s*[^📅⏰✅🔁]*/gu;
 function stripTokens(s) { return String(s || '').replace(ITEM_TOKEN, '').trim(); }
+
+/* To-do item marks, as mnemo/checklist.py reads and writes them: 📅 date,
+   ⏰ reminder, 🔁 repeat, ✅ the day it was done. Always at the line's end. */
+const MARK_RE = /\s*([📅⏰✅🔁])️?\s*([^📅⏰✅🔁]*)/gu;
+function splitTokens(content) {
+  const s = String(content || ''), first = s.search(/[📅⏰✅🔁]/u);
+  const tok = {};
+  if (first < 0) return [s, tok];
+  for (const m of s.slice(first).matchAll(MARK_RE)) {
+    const v = m[2].trim(), d = v.match(/^(\d{4}-\d{2}-\d{2})(?:[ T](\d{1,2}):(\d{2}))?/);
+    if (m[1] === '🔁') { if (v) tok.repeat = v; continue; }
+    if (!d) continue;
+    if (m[1] === '⏰') tok.remind = `${d[1]}T${(d[2] || '9').padStart(2, '0')}:${d[3] || '00'}:00`;
+    else if (m[1] === '📅') tok.due = d[1];
+    else tok.doneOn = d[1];
+  }
+  return [s.slice(0, first).trimEnd(), tok];
+}
+function tokensText(t) {
+  const out = [];
+  if (t.due) out.push('📅 ' + t.due.slice(0, 10));
+  if (t.remind) out.push('⏰ ' + t.remind.slice(0, 10) + ' ' + t.remind.slice(11, 16));
+  if (t.repeat) out.push('🔁 ' + t.repeat);
+  if (t.doneOn) out.push('✅ ' + t.doneOn.slice(0, 10));
+  return out.length ? ' ' + out.join(' ') : '';
+}
+const itemLine = (indent, done, text, tok) => `${indent}- [${done ? 'x' : ' '}] ${text}${tokensText(tok)}`.replace(/\s+$/, '');
+const localDay = (s) => { const [y, m, d] = String(s).slice(0, 10).split('-').map(Number); return new Date(y, m - 1, d); };
+const dayLabel = (d) => { d = new Date(d); return `${WD[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}`; };
+function itemChips(t) {
+  const out = [];
+  if (t.remind) { const d = new Date(t.remind); out.push(`<span class="ichip${d < new Date() ? ' over' : ''}" title="Reminder">${icon('bell', 11)}${esc(fmtAbs(d))}</span>`); }
+  if (t.due) out.push(`<span class="ichip${localDay(t.due) < sod(new Date()) ? ' over' : ''}" title="Date">${icon('clock', 11)}${esc(dayLabel(localDay(t.due)))}</span>`);
+  if (t.repeat) out.push(`<span class="ichip" title="Repeats">${icon('refresh', 11)}${esc(t.repeat)}</span>`);
+  return out.join('');
+}
+// Done and to-do items under a heading, until the next heading at its level or above.
+function sectionProgress(lines, start) {
+  const level = (lines[start].match(/^#+/) || [''])[0].length;
+  let done = 0, total = 0;
+  for (let i = start + 1; i < lines.length; i++) {
+    const h = lines[i].match(/^(#{1,3})\s/);
+    if (h && h[1].length <= level) break;
+    const m = lines[i].match(CHECK_LINE);
+    if (m) { total++; if (m[2] !== ' ') done++; }
+  }
+  return [done, total];
+}
+// How a list with a deadline is going, as mnemo/reminders.py works it out.
+function listPace(done, total, due, start, now = new Date()) {
+  const left = Math.max(0, total - done);
+  if (!total) return { state: 'empty', left: 0 };
+  if (!left) return { state: 'done', left: 0 };
+  if (!due) return { state: 'open', left };
+  const today = sod(now), dueDay = sod(new Date(due));
+  const daysLeft = Math.round((dueDay - today) / DAY) + 1;
+  if (daysLeft <= 0) return { state: 'late', left, daysLeft: daysLeft - 1 };
+  const perDay = Math.ceil(left / daysLeft), startDay = start ? sod(new Date(start)) : today;
+  const span = Math.max(1, Math.round((dueDay - startDay) / DAY) + 1);
+  const expected = total * Math.min(1, Math.max(0, Math.round((today - startDay) / DAY)) / span);
+  return { state: done + 1 < expected ? 'behind' : 'on_track', left, daysLeft, perDay };
+}
+// Gentle words for it: never a telling-off.
+function paceHTML(p, next) {
+  const nx = next ? ` · Next up: <b>${esc(next)}</b>` : '';
+  const a = `about ${p.perDay} a day`;
+  return { empty: 'Nothing on it yet. Add the first item below.', done: 'All done 🎉', open: `${p.left} to go${nx}`,
+    on_track: `On track: ${a}${nx}`, behind: `A bit behind: ${a} would catch up, or move the deadline?${nx}`,
+    late: `Past the deadline, with ${p.left} to go.${nx}` }[p.state] || '';
+}
+function daysLeftWords(due) {
+  const days = Math.round((sod(new Date(due)) - sod(new Date())) / DAY);
+  return days < 0 ? `${-days} day${days === -1 ? '' : 's'} late` : days === 0 ? 'due today' : days === 1 ? '1 day left' : `${days} days left`;
+}
+function deadlineItems(has) {
+  const now = new Date(), eve = (d) => at(d, 18), fri = addDays(now, ((5 - now.getDay() + 7) % 7) || 7);
+  const pick = (label, d) => ({ label, value: eve(d), hint: dayLabel(d) });
+  const items = [pick('Tomorrow', addDays(now, 1)), pick('Friday', fri), pick('In a week', addDays(now, 7)),
+    pick('In two weeks', addDays(now, 14)), pick('End of the month', new Date(now.getFullYear(), now.getMonth() + 1, 0)), { dt: true }];
+  if (has) items.push({ sep: true }, { label: 'No deadline', value: 'remove', icon: 'x' });
+  return items;
+}
 function checkProgress(body) {
   let done = 0, total = 0, code = false;
   for (const L of String(body || '').split('\n')) {
@@ -1563,12 +1672,45 @@ function parseWhen(src, now = new Date()) {
 const KIND_WORDS = /\b(remind me to|need to|have to|gotta|don'?t forget to|to-?do|todo)\b/;
 const VERB_START = /^(buy|call|email|pay|book|renew|pick up|send|fix|finish|order|return|schedule|text|ring|cancel|submit|clean|water)\b/;
 
+const LIST_WORD = '(?:to-?do\\s+|todo\\s+|check\\s*|study\\s+|shopping\\s+|packing\\s+)?list';
+const LIST_NAMED = new RegExp(`^\\s*(?:(?:make|create|start|new|add)\\s+(?:me\\s+)?(?:a\\s+|an\\s+)?(?:new\\s+)?)?${LIST_WORD}\\s+(?:for|of|called|named)\\s+([^:\\n]{1,60}?)\\s*[:\\n–-]\\s*([\\s\\S]+)$`, 'i');
+const LIST_TRAILING = new RegExp(`^\\s*([^:\\n]{1,60}?)\\s+${LIST_WORD}\\s*[:\\n]\\s*([\\s\\S]+)$`, 'i');
+const LIST_BULLET = /^\s*(?:[-*+•]|\d+[.)]|\[[ xX]?\])\s*(?:\[[ xX]?\]\s*)?/;
+function listOf(raw) {
+  const title = (t) => { t = t.trim().replace(/^[\s,.:]+|[\s,.:]+$/g, '').replace(/^(?:the|my|a|an|our)\s+/i, ''); return t ? cap(t) : 'To-do list'; };
+  const split = (s) => { const ls = s.split('\n').filter((l) => l.trim()); return (ls.length > 1 ? ls : s.split(/\s*[,;]\s*|\s+and\s+(?=[^,;]+$)/)).map((p) => p.replace(LIST_BULLET, '').trim().replace(/[\s.]+$/, '')).filter(Boolean); };
+  const deadline = (s) => {
+    const m = s.match(/\s*,?\s*\b(?:by|due|before|deadline)\s+([^,;]+?)\s*$/i); if (!m) return [s, null];
+    const w = parseWhen(m[1].toLowerCase()); if (!w) return [s, null];
+    const d = new Date(w.date);
+    if (!/\d{1,2}\s*(?:am|pm)|\d{1,2}:\d{2}|\bat\s+\d|noon|midnight|morning|evening|tonight|afternoon/i.test(m[1])) d.setHours(18, 0, 0, 0);
+    return [s.slice(0, m.index), d];
+  };
+  const lines = raw.split('\n').filter((l) => l.trim());
+  if (lines.length >= 2 && lines.filter((l) => LIST_BULLET.test(l)).length >= Math.max(2, lines.length - 1)) {
+    let head = LIST_BULLET.test(lines[0]) ? '' : lines[0];
+    head = head.replace(new RegExp(`\\s*${LIST_WORD}\\s*$`, 'i'), '').replace(/[\s:]+$/, '');
+    const [h, due] = head ? deadline(head) : ['', null];
+    return { title: title(h), items: split(lines.slice(head ? 1 : 0).join('\n')), due };
+  }
+  for (const re of [LIST_NAMED, LIST_TRAILING]) {
+    const m = raw.match(re); if (!m) continue;
+    const [items, due] = deadline(m[2].trim()), parts = split(items);
+    if (parts.length) return { title: title(m[1]), items: parts, due };
+  }
+  return null;
+}
 function interpret(raw) {
   const text = String(raw || '').replace(/\s+/g, ' ').trim();
   const low = text.toLowerCase();
   const r = { text, search: null, due: null, remind: false, topic: null, append: null, appendTarget: null, appendText: '', todo: false, link: null, title: '' };
   if (!text) return r;
   if (text.startsWith('?')) { r.search = text.slice(1).trim(); return r; }
+  // A whole to-do list, or "don't remind me about … until …" (mnemo/intent.py has the same rules).
+  const made = listOf(String(raw || ''));
+  if (made) { r.list = made; return r; }
+  const pz = text.match(/^\s*(?:please\s+)?(?:(?:don'?t|do\s+not|stop)\s+(?:remind(?:ing)?|checking\s+in\s+(?:with|on)|nag(?:ging)?)(?:\s+me)?|pause|mute|snooze)\s+(?:about\s+|on\s+|for\s+|reminders?\s+(?:for|about)\s+)?(?:the\s+|my\s+)?(.+?)\s+(?:until|till|til|before)\s+(.+?)\s*[.!]?$/i);
+  if (pz) { const w = parseWhen(pz[2].toLowerCase()); if (w) { r.pause = { target: cap(pz[1]), until: w.date }; return r; } }
   const spans = [];
 
   const url = text.match(/\bhttps?:\/\/[^\s]+|\bwww\.[^\s]+\.[a-z]{2,}[^\s]*/i);
@@ -1988,7 +2130,7 @@ function mdHTML(src) {
     if (/^\s*```/.test(L)) { if (inCode) { html += `<pre><code>${esc(code.join('\n'))}</code></pre>`; code = []; inCode = false; } else { flushP(); flushL(); inCode = true; } continue; }
     if (inCode) { code.push(L); continue; }
     let m;
-    if ((m = L.match(/^\s*[-*]\s+(.*)/))) { flushP(); if (list !== 'ul') { flushL(); html += '<ul>'; list = 'ul'; } html += `<li>${inlineHTML(m[1])}</li>`; continue; }
+    if ((m = L.match(/^\s*[-*]\s+(.*)/))) { flushP(); if (list !== 'ul') { flushL(); html += '<ul>'; list = 'ul'; } const t = m[1].match(/^\[([ xX])\]\s+(.*)/); html += t ? `<li class="md-task${t[1] !== ' ' ? ' done' : ''}">${t[1] !== ' ' ? '☑' : '☐'} ${inlineHTML(stripTokens(t[2]))}</li>` : `<li>${inlineHTML(m[1])}</li>`; continue; }
     if ((m = L.match(/^\s*\d+[.)]\s+(.*)/))) { flushP(); if (list !== 'ol') { flushL(); html += '<ol>'; list = 'ol'; } html += `<li>${inlineHTML(m[1])}</li>`; continue; }
     if ((m = L.match(/^#{1,4}\s+(.*)/))) { flushP(); flushL(); html += `<h4>${inlineHTML(m[1])}</h4>`; continue; }
     if (!L.trim()) { flushP(); flushL(); continue; }
@@ -2034,7 +2176,14 @@ function blockHTML(lines, b, idx) {
   const style = f.ind ? ` style="--ind:${f.ind}"` : '';
   if (f.cls === 'b-empty') return `<div class="blk b-empty" data-b="${idx}"><br></div>`;
   if (f.cls === 'b-hr') return `<div class="blk b-hr" data-b="${idx}" data-p="${f.p}">${GRIP}</div>`;
-  if (f.cls === 'b-check') return `<div class="blk b-check${f.checked ? ' done' : ''}" data-b="${idx}" data-p="${f.p}"${style}>${GRIP}<button class="md-check${f.checked ? ' on' : ''}" type="button" role="checkbox" aria-checked="${f.checked}" aria-label="${f.checked ? 'Done' : 'To do'}: ${esc(f.content)}">${icon('check', 12)}</button><span class="txt">${inlineHTML(f.content, true) || '<br>'}</span></div>`;
+  if (f.cls === 'b-check') {
+    const [text, tok] = splitTokens(f.content);
+    return `<div class="blk b-check${f.checked ? ' done' : ''}" data-b="${idx}" data-p="${f.p}"${style}>${GRIP}<button class="md-check${f.checked ? ' on' : ''}" type="button" role="checkbox" aria-checked="${f.checked}" aria-label="${f.checked ? 'Done' : 'To do'}: ${esc(text)}">${icon('check', 12)}</button><span class="txt">${inlineHTML(text, true) || '<br>'}</span>${itemChips(tok)}<button class="icon-btn sm item-when" type="button" data-act="item-when" data-li="${b.start}" aria-label="${tok.remind ? 'Change the reminder' : 'Remind me about this'}" title="${tok.remind ? 'Change the reminder' : 'Remind me about this'}">${icon('bell', 14)}</button></div>`;
+  }
+  if (/^b-h\d$/.test(f.cls)) {
+    const [text, tok] = splitTokens(f.content), [d, t] = sectionProgress(lines, b.start);
+    return `<div class="blk ${f.cls}" data-b="${idx}" data-p="${f.p}">${GRIP}${inlineHTML(text, true) || '<br>'}${itemChips(tok)}${t ? `<span class="sec-prog">${d} / ${t}</span>` : ''}</div>`;
+  }
   return `<div class="blk ${f.cls}" data-b="${idx}" data-p="${f.p}"${f.n ? ` data-n="${f.n}"` : ''}${style}>${GRIP}${inlineHTML(f.content, true) || '<br>'}</div>`;
 }
 
@@ -2067,6 +2216,7 @@ const Ed = {
     this.blocks = parseBlocks(this.lines);
     this.el.innerHTML = this.blocks.map((b, i) => blockHTML(this.lines, b, i)).join('');
     this.el.classList.toggle('is-empty', this.lines.length === 1 && this.lines[0] === '');
+    if (this.note && this.note.kind === 'list') renderListBox();
   },
   blockOf(li) { return this.blocks.findIndex((b) => li >= b.start && li <= b.end); },
 
@@ -2178,12 +2328,14 @@ const Ed = {
     if (chk) {
       buzz();
       const bi = +chk.closest('.blk').dataset.b, li = this.blocks[bi].start;
-      this.lines[li] = this.lines[li].replace(/\[([ xX])\]/, (_, c) => (c === ' ' ? '[x]' : '[ ]'));
+      // Ticking also notes the day, as the server does, so repeats and history can use it.
+      const m = this.lines[li].match(CHECK_LINE);
+      if (m) { const [text, tok] = splitTokens(m[3] || ''), done = m[2] === ' '; tok.doneOn = done ? toISO(new Date()).slice(0, 10) : null; this.lines[li] = itemLine(m[1], done, text, tok); }
       this.changed(); this.render();
       this.el.querySelector(`[data-b="${bi}"] .md-check`)?.focus();
       return;
     }
-    if (e.target.closest('a')) return;
+    if (e.target.closest('a') || e.target.closest('[data-act]')) return;
     const blk = e.target.closest('.blk');
     if (!blk || !this.el.contains(blk)) { this.edit(this.lines.length - 1, Infinity); return; }
     const bi = +blk.dataset.b, b = this.blocks[bi];
@@ -2354,7 +2506,7 @@ const VIEWS = [
   { key: 'task', label: 'To-dos', icon: 'task', kinds: ['task'] },
 ];
 const KIND = {
-  note: { icon: 'notes', label: 'Note' }, task: { icon: 'task', label: 'To-do' }, link: { icon: 'link', label: 'Link' },
+  note: { icon: 'notes', label: 'Note' }, task: { icon: 'task', label: 'To-do' }, list: { icon: 'task', label: 'To-do list' }, link: { icon: 'link', label: 'Link' },
   video: { icon: 'play', label: 'Video' }, article: { icon: 'article', label: 'Article' }, image: { icon: 'image', label: 'Image' },
   idea: { icon: 'bulb', label: 'Idea' }, reference: { icon: 'bookmark', label: 'Reference' }, snippet: { icon: 'code', label: 'Snippet' },
 };
@@ -2573,6 +2725,8 @@ async function loadList() {
     S.inbox = await api.inbox();
     const all = [...S.inbox.notes, ...S.inbox.review];
     await Promise.all(all.filter((n) => !S.sugg.has(n.id)).map(async (n) => { try { S.sugg.set(n.id, (await api.suggest(n.id)).suggestions || []); } catch { S.sugg.set(n.id, []); } }));
+  } else if (v.type === 'lists') {
+    S.list = (await api.lists()).lists;
   } else if (v.type === 'search') {
     S.hits = v.q ? (await api.search(v.q)).hits || [] : [];
     S.hitIdx = Math.min(S.hitIdx, Math.max(0, S.hits.length - 1));
@@ -2648,6 +2802,7 @@ function renderSidebar() {
     ${nav('today', 'Today', 'sun', S.dueCount || '', S.dueCount ? 'due' : '')}
     ${nav('all', 'All notes', 'notes', total || '')}
     ${nav('inbox', 'Inbox', 'inbox', st.inbox || '')}
+    ${nav('lists', 'To-do lists', 'task')}
     ${nav('personal', 'Personal notes', 'bookmark')}
     ${v.type === 'personal' && P.data && !S.sbCollapsed ? `<ul class="views">${P.data.sources.map((s) => `<li><button class="view-item" data-act="p-go" data-path="${esc(pathFromView({ source: s.source }))}" ${v.source === s.source ? 'aria-current="page"' : ''}>${esc(s.name)}</button></li>`).join('')}<li><button class="view-item" data-act="p-go" data-path="/personal-notes/links">All links</button></li><li><button class="view-item" data-act="p-go" data-path="/personal-notes/lists">Lists</button></li></ul>` : ''}
     <div class="sb-label" id="collLabel"><span>Collections</span></div>
@@ -2965,6 +3120,18 @@ function renderList() {
     head = `<h2>${icon('search', 18)}Search</h2><p>${S.hits.length ? `${S.hits.length} result${S.hits.length === 1 ? '' : 's'} for “${esc(v.q)}”` : v.q ? `No matches for “${esc(v.q)}”` : 'Type after the ? to search'}</p>`;
     body = S.hits.map((h, i) => rowHTML({ id: h.id, title: h.title, topic: h.topic, kind: h.kind || 'note' }, { showColl: true, titleHTML: highlight(h.title, v.q), snipHTML: `<span class="search-snip">${highlight(h.snippet || '', v.q)}</span>` }).replace('class="row ', `class="row ${i === S.hitIdx ? 'is-hit' : ''} `)).join('')
       || (v.q ? `<div class="list-empty">Try fewer words, or ask the chat instead: it can search by meaning.</div>` : '');
+  } else if (v.type === 'lists') {
+    const tiles = tilesOn();
+    head = `<h2>${icon('task', 18)}To-do lists</h2><p>${S.list.length} list${S.list.length === 1 ? '' : 's'}</p>
+      <div class="list-acts"><button class="btn sm outline" data-act="new-list">${icon('plus', 14)}New list</button>
+      <div class="seg view-switch" role="radiogroup" aria-label="Show as">${[['list', 'List', 'notes'], ['tiles', 'Tiles', 'grid']].map(([k, label, ic]) => `<button role="radio" data-act="view-mode" data-v="${k}" aria-checked="${(k === 'tiles') === tiles}">${icon(ic, 13)}${label}</button>`).join('')}</div></div>`;
+    const empty = `<div class="list-empty">No to-do lists yet. Type something like “exam prep list: algebra, calculus by 15 nov” in the box, or press New list.</div>`;
+    if (tiles) {
+      el.innerHTML = `<div class="list-head">${head}</div>${S.list.length ? `<div class="tiles" role="list">${S.list.map(tileHTML).join('')}</div>` : empty}`;
+      if (hadFocus) focusRow(focusId);
+      return;
+    }
+    body = S.list.map(listRowHTML).join('') || empty;
   } else {
     const isTopic = v.type === 'topic';
     const node = isTopic ? flatTopics(S.state?.tree).find((n) => n.path === v.path) : null;
@@ -2988,8 +3155,45 @@ function renderList() {
   if (hadFocus) focusRow(focusId);
 }
 
+/* ---------- To-do lists ---------- */
+function listRowHTML(n) {
+  const l = n.list || {}, sel = S.sel === n.id, p = listPace(l.done || 0, l.total || 0, n.due, n.created);
+  const pct = l.total ? Math.round((100 * l.done) / l.total) : 0;
+  const due = n.due ? `<span class="row-due${new Date(n.due) < sod(new Date()) && p.state !== 'done' ? ' over' : ''}">${esc(daysLeftWords(n.due))}</span>` : '';
+  return `<div class="row list-row ${sw(n.topic)} ${sel ? 'is-sel' : ''} ${p.state === 'done' ? 'is-done' : ''}" data-row="${esc(n.id)}" role="listitem">
+    <button class="row-open" data-act="open" data-id="${esc(n.id)}" ${sel ? 'aria-current="true"' : ''}>
+      <span class="row-edge" aria-hidden="true"></span>
+      <span class="row-kind">${icon('task', 16)}</span>
+      <span class="row-body">
+        <span class="row-top"><span class="row-title">${esc(n.title || 'Untitled')}</span>${due}</span>
+        <span class="list-prog"><span class="bar"><span style="width:${pct}%"></span></span><span>${l.total ? `${l.done} of ${l.total}` : 'Empty'}</span></span>
+        <span class="row-snip"><span class="txt">${paceHTML(p, l.next)}</span></span>
+      </span>
+    </button>
+  </div>`;
+}
+// The box above a list's items: its deadline, progress and pace. It follows
+// the editor, so ticking an item updates it at once.
+function renderListBox() {
+  const n = S.openNote, box = $('#listBox');
+  if (!box || !n || !Ed.note || Ed.note.id !== n.id) return;
+  const items = Ed.lines.map((L) => L.match(CHECK_LINE)).filter(Boolean);
+  const done = items.filter((m) => m[2] !== ' ').length, total = items.length;
+  const next = items.find((m) => m[2] === ' ');
+  const p = listPace(done, total, n.due, n.created);
+  const chip = n.due
+    ? `<button class="chip ${p.state === 'late' ? 'over' : 'accent'}" data-act="list-due" data-id="${esc(n.id)}" title="Move the deadline">${icon('clock', 13)}<span class="lbl">Due ${esc(dayLabel(n.due))}</span><span style="font-weight:500">· ${esc(daysLeftWords(n.due))}</span>${icon('chev-down', 12)}</button>`
+    : `<button class="chip quiet" data-act="list-due" data-id="${esc(n.id)}">${icon('clock', 13)}Add a deadline</button>`;
+  const move = p.state === 'behind' || p.state === 'late' ? `<button class="btn sm" data-act="list-due" data-id="${esc(n.id)}">Move the deadline</button>` : '';
+  box.innerHTML = `<div class="lb-row">${chip}</div>
+    ${total ? `<div class="lb-prog"><span class="bar"><span style="width:${Math.round((100 * done) / total)}%"></span></span><span>${done} of ${total} done</span></div>` : ''}
+    <p class="lb-pace">${paceHTML(p, next ? stripTokens(next[3] || '') : '')}${move}</p>`;
+  Ed.el?.classList.toggle('fold-done', !S.showDone);
+  $('#listFoot').innerHTML = `<button class="btn sm outline" data-act="add-item">${icon('plus', 14)}Add an item</button>
+    ${done ? `<button class="btn sm" data-act="toggle-done-items" aria-expanded="${!!S.showDone}">${icon(S.showDone ? 'chev-down' : 'chev-right', 14)}${S.showDone ? `Hide ${done} done` : `${done} done`}</button>` : ''}`;
+}
 /* ---------- Tiles ---------- */
-const TILE_VIEWS = ['all', 'topic'];
+const TILE_VIEWS = ['all', 'topic', 'lists'];
 function viewKey(v = S.view) { return v.type === 'topic' ? 'topic:' + v.path : v.type; }
 function tilesOn(v = S.view) { return TILE_VIEWS.includes(v.type) && !!S.tiles[viewKey(v)]; }
 function applyTilesLayout() {
@@ -3054,7 +3258,7 @@ function focusRow(id) {
    Esc cancels; Ctrl+Z undoes. Alt+arrow keys do the same from the keyboard.
    ===================================================================== */
 const DRAG_PX = 6;
-function canReorder() { return S.view.type === 'all' || S.view.type === 'topic'; }
+function canReorder() { return ['all', 'topic', 'lists'].includes(S.view.type); }
 function wireNoteDrag() {
   $('#listPane').addEventListener('pointerdown', (e) => {
     // Touch keeps scrolling the board; touch users use the note's Move menu.
@@ -3257,7 +3461,7 @@ async function renderDetail() {
 
 function noteHTML(n) {
   const k = kindOf(n.kind);
-  const isTask = n.kind === 'task' || !!n.due;
+  const isTask = n.kind === 'task' || (!!n.due && n.kind !== 'list');
   const over = n.due && !n.done && new Date(n.due) < new Date();
   const swc = sw(n.topic);
   const unfiled = !n.topic;
@@ -3286,14 +3490,17 @@ function noteHTML(n) {
     <div class="meta-row">
       <button class="chip ${swc}" data-act="move" data-id="${esc(n.id)}" aria-label="Collection: ${esc(topicLabel(n.topic))}. Move" title="Move to another collection"><span class="dot" aria-hidden="true"></span><span class="lbl">${esc(topicLabel(n.topic))}</span>${icon('chev-down', 12)}</button>
       <span class="chip quiet">${icon(k.icon, 13)}${k.label}</span>
-      ${n.due ? `<button class="chip ${over ? 'over' : 'accent'}" data-act="due" data-id="${esc(n.id)}" title="Change the time">${icon(n.remind ? 'bell' : 'clock', 13)}<span class="lbl">${esc(fmtAbs(n.due))}</span></button>`
+      ${n.kind === 'list' ? '' : n.due ? `<button class="chip ${over ? 'over' : 'accent'}" data-act="due" data-id="${esc(n.id)}" title="Change the time">${icon(n.remind ? 'bell' : 'clock', 13)}<span class="lbl">${esc(fmtAbs(n.due))}</span></button>`
         : `<button class="chip quiet" data-act="due" data-id="${esc(n.id)}">${icon('bell', 13)}Remind me</button>`}
       ${isTask ? (n.done ? `<button class="chip ok" data-act="done" data-id="${esc(n.id)}" data-v="0" title="Mark not done">${icon('check', 13)}Done</button>` : `<button class="btn sm outline" data-act="done" data-id="${esc(n.id)}" data-v="1">${icon('check', 14)}Mark done</button>`) : ''}
       ${unfiled ? `<button class="btn sm tinted" data-act="file-it" data-id="${esc(n.id)}">${icon('sparkle', 14)}File it for me</button>` : ''}
+      ${n.kind !== 'list' && n.progress && n.progress[1] >= 2 ? `<button class="chip quiet" data-act="make-list" data-id="${esc(n.id)}">${icon('task', 13)}Make this a to-do list</button>` : ''}
     </div>
+    ${n.kind === 'list' ? '<section class="list-box" id="listBox" aria-label="Progress"></section>' : ''}
     ${triage}${media}
     ${(n.kind === 'image' || n.source) ? '<div class="body-label" id="bodyLabel">Your notes</div>' : ''}
     <div class="md-body" id="mdBody" tabindex="0" role="group" aria-label="Note body. Press Enter to edit."></div>
+    ${n.kind === 'list' ? '<div class="list-foot" id="listFoot"></div>' : ''}
     <section class="connects" aria-labelledby="connTitle">
       <div class="connects-head">${icon('graph', 17)}<h3 id="connTitle">Connects to</h3>${rel.length ? `<span class="badge">${rel.length}</span>` : ''}</div>
       ${rel.length ? `<div class="rel-grid">${rel.map((r) => `<button class="rel-card ${sw(r.topic)}" data-act="open-note" data-id="${esc(r.id)}">
@@ -3757,6 +3964,12 @@ function renderChips(it, searching) {
   if (!v && !S.attach) { box.innerHTML = hint; return; }
   if (S.mode === 'ask') { box.innerHTML = `<span class="chip accent">${icon('sparkle', 13)}Ask your notes</span><span class="cap-hint">The answer opens on the right</span>`; return; }
   if (searching) { box.innerHTML = `<span class="chip accent">${icon('search', 13)}${it.search ? `Search “${esc(it.search)}”` : 'Search your notes'}</span><span class="cap-hint"><kbd>↑</kbd><kbd>↓</kbd>pick<span class="sep">·</span><kbd>Enter</kbd>open<span class="sep">·</span><kbd>Esc</kbd>clear</span>`; return; }
+  if (it.list) {
+    const n = it.list.items.length;
+    box.innerHTML = `<span class="chip accent">${icon('task', 13)}To-do list · ${esc(it.list.title)}</span><span class="chip quiet">${n} item${n === 1 ? '' : 's'}</span>${it.list.due ? `<span class="chip quiet">${icon('clock', 13)}Due ${esc(dayLabel(it.list.due))}</span>` : ''}`;
+    return;
+  }
+  if (it.pause) { box.innerHTML = `<span class="chip quiet">${icon('snooze', 13)}No check-ins from “${esc(it.pause.target)}” until ${esc(dayLabel(it.pause.until))}</span>`; return; }
   const chips = [];
   if (S.attach) chips.push(`<span class="chip quiet">${icon('image', 13)}Image</span>`);
   if (it.due) chips.push(`<span class="chip accent" title="${esc(fmtRel(it.due))}">${icon(it.remind ? 'bell' : 'clock', 13)}<span class="lbl">${esc(fmtAbs(it.due))}</span><span style="font-weight:500">${relWord(it.due) ? ' · ' + relWord(it.due) : ''}</span></span>`);
@@ -3831,6 +4044,8 @@ async function submitCapture() {
 }
 
 function captureToast(res) {
+  if (res.pausedUntil) return toast({ icon: 'snooze', msg: `No check-ins from <b>${esc(res.title)}</b> until ${esc(dayLabel(localDay(res.pausedUntil)))}`, actions: [{ label: 'Undo', act: 'undo' }] });
+  if (res.kind === 'list' && res.listItems) return toast({ icon: 'task', sw: sw(res.topic), msg: `To-do list <b>${esc(res.title)}</b> · ${res.listItems} item${res.listItems === 1 ? '' : 's'}${res.due ? ` · due ${esc(dayLabel(res.due))}` : ''}`, actions: [{ label: 'Undo', act: 'undo' }, { label: 'Open', act: 'toast-open', id: res.id }] });
   const topic = res.topic || null;
   const actions = [{ label: 'Undo', act: 'undo' }, { label: 'Move…', act: 'toast-move', id: res.id }];
   if (res.appendedTo) return toast({ icon: 'plus', sw: sw(topic), msg: `Added to <b>${esc(typeof res.appendedTo === 'object' ? res.appendedTo.title : res.appendedTo)}</b>`, actions: [{ label: 'Undo', act: 'undo' }, { label: 'Open', act: 'toast-open', id: res.id }] });
@@ -4182,6 +4397,43 @@ const ACTS = {
   open: (el) => openNote(el.dataset.id),
   'view-mode': (el) => setTiles(el.dataset.v === 'tiles'),
   'tile-check': (el) => tickTile(el),
+  'new-list': () => newNote('list'),
+  'list-due': async (el) => {
+    const id = el.dataset.id, n = S.openNote && S.openNote.id === id ? S.openNote : S.list.find((x) => x.id === id);
+    const v = await openMenu(el, { title: n && n.due ? 'Move the deadline' : 'Set a deadline', items: deadlineItems(!!(n && n.due)) });
+    if (v === undefined) return;
+    await Ed.flush();
+    try { await busy(() => api.listSettings({ id, due: v === 'remove' ? null : toISO(v) })); }
+    catch { toast({ icon: 'x', msg: "Couldn't change the deadline just now.", sw: 'sw-tangerine' }); return; }
+    toast({ icon: 'clock', msg: v === 'remove' ? 'No deadline now' : `Deadline: <b>${esc(dayLabel(v))}</b>`, actions: [{ label: 'Undo', act: 'undo' }] });
+    if (S.sel === id) await renderDetail();
+    softRefresh();
+  },
+  'item-when': async (el) => {
+    const li = +el.dataset.li, m = (Ed.lines[li] || '').match(CHECK_LINE); if (!m) return;
+    const [text, tok] = splitTokens(m[3] || '');
+    const v = await openMenu(el, { title: tok.remind ? 'Change the reminder' : 'Remind me about this', items: timeItems(!!tok.remind) });
+    if (v === undefined || !Ed.lines[li]?.match(CHECK_LINE)) return;
+    tok.remind = v === 'remove' ? null : toISO(v);
+    Ed.lines[li] = itemLine(m[1], m[2] !== ' ', text, tok);
+    Ed.changed(); Ed.render();
+    toast({ icon: 'bell', msg: tok.remind ? `Reminder saved · <b>${esc(fmtAbs(v))}</b>` : 'Reminder removed' });
+  },
+  'add-item': () => {
+    if (!Ed.note) return;
+    const L = Ed.lines, last = L.reduce((a, l, i) => (CHECK_LINE.test(l) ? i : a), -1);
+    let at = last >= 0 ? last + 1 : L.length;
+    if (last < 0 && L.length === 1 && !L[0].trim()) { L[0] = '- [ ] '; at = 0; } else L.splice(at, 0, '- [ ] ');
+    S.showDone = S.showDone || false;
+    Ed.changed(); Ed.edit(at, Infinity);
+  },
+  'toggle-done-items': () => { S.showDone = !S.showDone; Ed.render(); },
+  'make-list': async (el) => {
+    await Ed.flush();
+    await busy(() => api.listSettings({ id: el.dataset.id, kind: 'list' }));
+    toast({ icon: 'task', msg: 'Now a to-do list', actions: [{ label: 'Undo', act: 'undo' }] });
+    await renderDetail(); softRefresh();
+  },
   'close-note': async () => {
     const id = S.sel; await Ed.flush(); await discardBlank();
     S.sel = null; markSelected(); await renderDetail();
@@ -4377,13 +4629,14 @@ function rerenderSettings(focusSel) {
   if (focusSel) $(focusSel)?.focus({ preventScroll: true });
 }
 
-async function newNote() {
+async function newNote(kind) {
   await Ed.flush();
   await discardBlank();
   const topic = S.view.type === 'topic' ? S.view.path : null;
-  const r = await busy(() => api.newNote('', '', topic));
+  const r = await busy(() => api.newNote('', '', topic, kind));
   freshId = r.id;
-  if (S.view.type !== 'all' && S.view.type !== 'topic') await go({ type: 'all' }, { sel: r.id });
+  const home = kind === 'list' ? 'lists' : 'all';      // a new list opens among the lists
+  if (![home, 'topic'].includes(S.view.type)) await go({ type: home }, { sel: r.id });
   else { await phUnwind(phScreens()); await refresh(); S.sel = r.id; renderList(); await renderDetail(); }
   phOpen('note');
   $('#noteTitle')?.focus();

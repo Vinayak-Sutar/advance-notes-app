@@ -57,6 +57,24 @@ SPECS = {
         "Set a reminder or to-do for the user.",
         text="What to be reminded about.",
         when_="When, in plain words, like 'tomorrow at 10am' or 'on the 1st'."),
+    "create_list": _fn(
+        "create_list",
+        "Make a to-do list for the user, with its items and, if they gave one, a deadline.",
+        title="The list's name, like 'Exam prep'.",
+        items="The items, separated by commas.",
+        due_="The deadline in plain words, like '15 nov'."),
+    "add_to_list": _fn(
+        "add_to_list",
+        "Add one item to one of the user's to-do lists. If there's no such list yet, "
+        "it is made.",
+        list="The list's name.",
+        item="What to add.",
+        when_="A time to be reminded about this item, in plain words."),
+    "pause_reminders": _fn(
+        "pause_reminders",
+        "Stop a to-do list's daily check-ins until a date the user gives.",
+        list="The list's name.",
+        until="When check-ins should start again, in plain words, like 'monday'."),
     "move_note": _fn(
         "move_note",
         "Move one of the user's notes to a collection (folder).",
@@ -70,6 +88,9 @@ STEP_LABELS = {
     "read_page": "Reading {url}",
     "calculator": "Working out {expression}",
     "create_reminder": "Setting a reminder",
+    "create_list": "Making the list “{title}”",
+    "add_to_list": "Adding to “{list}”",
+    "pause_reminders": "Pausing “{list}”",
     "move_note": "Moving “{note}”",
 }
 

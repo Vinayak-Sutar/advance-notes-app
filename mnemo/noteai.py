@@ -21,6 +21,7 @@ from datetime import datetime
 from typing import Protocol
 
 from . import calc
+from . import checklist as CL
 from . import websearch as W
 
 MAX_BODY = 7000          # longer notes are trimmed in the prompt...
@@ -49,8 +50,9 @@ job now. "I don't know" is always better than a wrong answer.
 {web_rule}
 "position" matters only for "add": "cursor" when they say here / below this / at this \
 point, "start" for the top or beginning, otherwise "end".
-Write lists with "- ", checklists with "- [ ] ", headings with "## ". Never wrap "text" \
-in code fences. Keep "reply" short, warm and plain. If "Calculator" lines are given, \
+Write lists with "- ", checklists with "- [ ] ", headings with "## ". To-do lines can \
+end with small marks (📅 a date, ⏰ a reminder, 🔁 a repeat, ✅ the day it was done): \
+keep them exactly as they are. Never wrap "text" in code fences. Keep "reply" short, warm and plain. If "Calculator" lines are given, \
 they are exact: use those numbers.
 
 Examples:
@@ -136,8 +138,30 @@ _MARKER = re.compile(r"^\s*(?:#{1,6}\s+|[-*+]\s+\[[ xX]\]\s+|[-*+]\s+|\d+[.)]\s+
 
 
 def _norm(line: str) -> str:
-    """A line without its list / heading / checkbox markers, for comparing."""
-    return " ".join(_MARKER.sub("", line).split()).lower()
+    """A line without its list / heading / checkbox markers or to-do marks, for comparing."""
+    return " ".join(CL.strip_tokens(_MARKER.sub("", line)).split()).lower()
+
+
+def _keep_marks(old: str, new: str) -> str:
+    """Put back the 📅 ⏰ 🔁 ✅ marks a rewrite dropped from to-do lines. They
+    hold reminders and dates; a model tidying wording shouldn't lose them."""
+    marks = {}
+    for line in old.splitlines():
+        m = CL.CHECK_RE.match(line)
+        if m and m.group(4):
+            text, found = CL.split_tokens(m.group(4))
+            if found:
+                marks[_norm(text)] = CL.tokens_text(found.get("due"), found.get("remind"),
+                                                    found.get("repeat"), found.get("done_on"))
+    if not marks:
+        return new
+    out = []
+    for line in new.splitlines():
+        m = CL.CHECK_RE.match(line)
+        if m and m.group(4) and not CL.split_tokens(m.group(4))[1]:
+            line = line.rstrip() + marks.get(_norm(m.group(4)), "")
+        out.append(line)
+    return "\n".join(out)
 
 
 def _dropped(old: str, new: str) -> list[str]:
@@ -283,6 +307,8 @@ def respond(title: str, body: str, request: str, history: list[dict] | None = No
 
     if action == "add":
         text = _without_repeats(text, body or "")
+    elif action == "replace":
+        text = _keep_marks(body or "", text)
     if action != "answer" and not text.strip():
         action = "answer"            # nothing to write, so it can only be an answer
     if action == "answer":

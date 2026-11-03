@@ -30,6 +30,7 @@ import urllib.request
 from datetime import datetime
 from typing import Iterator, Protocol
 
+from . import intent as I
 from . import notes as N
 from . import search as S
 from . import topics as T
@@ -60,7 +61,8 @@ If web results are given below, answer from them, name the page you used, and \
 don't search again. If they don't contain the answer, say so.
 
 You can't change notes yourself. If the user wants something done, tell them to \
-start their message with "remind me", "save" or "move".
+start their message with "remind me", "save" or "move", or to say something like \
+"exam prep list: algebra, calculus by 15 nov" or "add optics to the exam prep list".
 Finish with one last line on its own: "Sources:" followed by what you used: note \
 numbers and web results, like "Sources: 1, W2", or "Sources: none"."""
 
@@ -69,12 +71,14 @@ else: "SEARCH: <short web search query>". You'll then be given web results."""
 WEB_OFF = """Web search is turned off. If you don't know something, say so plainly \
 and mention that turning on web search in Settings would let you look it up."""
 WEB_TOOLS = """You have tools. Use search_notes to look further through the user's \
-notes, calculator for any arithmetic, create_reminder to set a reminder and move_note \
-to move a note. Use web_search (then read_page for details) when you need the web, \
+notes, calculator for any arithmetic, create_reminder to set a reminder, move_note \
+to move a note, and create_list, add_to_list and pause_reminders for to-do lists. \
+Use web_search (then read_page for details) when you need the web, \
 instead of guessing. Answer only once you have what you need."""
 TOOLS_NO_WEB = """You have tools. Use search_notes to look further through the user's \
-notes, calculator for any arithmetic, create_reminder to set a reminder and move_note \
-to move a note. Web search is turned off: if you don't know something, say so and \
+notes, calculator for any arithmetic, create_reminder to set a reminder, move_note \
+to move a note, and create_list, add_to_list and pause_reminders for to-do lists. \
+Web search is turned off: if you don't know something, say so and \
 mention that turning on web search in Settings would let you look it up."""
 
 
@@ -161,6 +165,21 @@ def _today() -> str:
     hour = d.hour % 12 or 12
     return (f"{d.strftime('%A')} {d.day} {d.strftime('%B')} {d.year}, "
             f"{hour}:{d.minute:02d} {'PM' if d.hour >= 12 else 'AM'}")
+
+
+def _day(iso: str) -> str:
+    """'2026-11-10' -> 'Tue 10 Nov'."""
+    try:
+        d = datetime.fromisoformat(iso[:10])
+    except ValueError:
+        return iso
+    return f"{d.strftime('%a')} {d.day} {d.strftime('%b')}"
+
+
+def _list_name(spoken) -> str:
+    """'the Exam prep list' -> 'Exam prep'."""
+    name = re.sub(r"^\s*(?:the|my)\s+", "", str(spoken or ""), flags=re.I)
+    return re.sub(r"\s+(?:to-?do\s+)?list\s*$", "", name, flags=re.I).strip(" .,:")
 
 
 def _cap(s: str) -> str:
@@ -493,8 +512,50 @@ class Chat:
                       "noteId": matches[0]["id"]}
             return AG.ToolResult(text=f"Moved {matches[0]['title']} to {dest}.", action=action)
 
+        def create_list(args):
+            title = _list_name(args.get("title")) or "To-do"
+            items = [i.strip(" .") for i in re.split(r"[,;\n]", str(args.get("items") or ""))
+                     if i.strip(" .")]
+            if not items:
+                return AG.ToolResult(text="Which items should the list have?")
+            due = str(args.get("due") or "").strip()
+            with self.lock:
+                res = self.engine.capture(f"{title} list: {', '.join(items)}"
+                                          + (f" by {due}" if due else ""))
+            _, actions, reply = self._list_reply(res)
+            return AG.ToolResult(text=reply.replace("**", ""), action=actions[0])
+
+        def add_to_list(args):
+            name, item = _list_name(args.get("list")), str(args.get("item") or "").strip()
+            if not name or not item:
+                return AG.ToolResult(text="Which list, and what should go on it?")
+            when, _ = I.parse_when(str(args.get("when") or ""))
+            remind = when.strftime("%Y-%m-%dT%H:%M:%S") if when else None
+            with self.lock:
+                target = self.engine.add_to_named_list(name, item, remind=remind)
+                title = N.get(self.conn, target)["title"]
+            extra = f", with a reminder {fmt_when(remind)}" if remind else ""
+            return AG.ToolResult(text=f"Added {item} to {title}{extra}.", action={
+                "kind": "note", "summary": f"Added to {title}", "noteId": target})
+
+        def pause_reminders(args):
+            name = _list_name(args.get("list"))
+            until, _ = I.parse_when(str(args.get("until") or ""))
+            if until is None:
+                return AG.ToolResult(text="Until when? Give a date, like 'monday'.")
+            with self.lock:
+                target = self.engine.pause_list(name, until.date().isoformat())
+                if target is None:
+                    return AG.ToolResult(text=f"There's no to-do list called {name}.")
+                title = N.get(self.conn, target)["title"]
+            day = _day(until.date().isoformat())
+            return AG.ToolResult(text=f"Paused {title} until {day}.", action={
+                "kind": "note", "summary": f"{title} · paused until {day}", "noteId": target})
+
         tools = {"search_notes": search_notes, "calculator": calculator,
-                 "create_reminder": create_reminder, "move_note": move_note}
+                 "create_reminder": create_reminder, "move_note": move_note,
+                 "create_list": create_list, "add_to_list": add_to_list,
+                 "pause_reminders": pause_reminders}
         if web.enabled:
             tools.update(web_search=web_search, read_page=read_page)
 
@@ -560,6 +621,12 @@ class Chat:
         """Carry out a request. Returns (sources, actions, reply) or None."""
         e = self.engine
         is_question = message.rstrip().endswith("?")
+        if not is_question:
+            parsed = I.parse(message)
+            if parsed.pause_target and e.find_list(parsed.pause_target) is None:
+                return ([], [], f"I couldn't find a to-do list called “{parsed.pause_target}”.")
+            if {"phrase:list", "phrase:add-to-list", "phrase:pause"} & set(parsed.matched):
+                return self._list_reply(e.capture(message, auto_file=auto_file))
         if _REMIND.match(message) and not is_question and not _REMIND_QUESTION.match(message):
             text = _SET_REMINDER.sub("remind me to ", message, count=1)
             res = e.capture(text, auto_file=auto_file)
@@ -607,6 +674,28 @@ class Chat:
                           "noteId": res.note.id}],
                     f"Saved it as a note in **{where}**.")
         return None
+
+    def _list_reply(self, res):
+        """(sources, actions, reply) for a capture that made or changed a to-do list."""
+        note = res.note
+        if res.paused_until:
+            when = _day(res.paused_until)
+            return ([self._brief(note.id)],
+                    [{"kind": "note", "summary": f"{note.title} · paused until {when}",
+                      "noteId": note.id}],
+                    f"I won't check in about **{note.title}** until **{when}**.")
+        if res.appended_to:
+            extra = f", with a reminder **{fmt_when(res.due_at)}**" if res.due_at else ""
+            return ([self._brief(res.appended_to)],
+                    [{"kind": "note", "summary": f"Added to {note.title}",
+                      "noteId": res.appended_to}],
+                    f"Added it to **{note.title}**{extra}.")
+        count = res.list_items
+        due = f", due **{fmt_when(res.due_at)}**" if res.due_at else ""
+        return ([], [{"kind": "note", "summary": f"{note.title} · {count} items",
+                      "noteId": note.id}],
+                f"Made the to-do list **{note.title}** with {count} "
+                f"item{'' if count == 1 else 's'}{due}.")
 
     def _collection_path(self, spoken: str) -> str:
         spoken = spoken.strip().strip("\"'“”").rstrip(".!?")
