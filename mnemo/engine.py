@@ -1306,6 +1306,8 @@ class Engine:
             # don't fire them all again.
             self.conn.execute("UPDATE notes SET reminded = 1 WHERE remind_at <= ?",
                               (local_now_iso(),))
+            from . import reminders as Rem
+            Rem.mark_past(self.conn)          # items and check-ins too
             for row in T.all_active(self.conn):
                 if row["name_vec"] is None:
                     T.set_name_vec(self.conn, row["id"], self._embed_one(row["name"]))

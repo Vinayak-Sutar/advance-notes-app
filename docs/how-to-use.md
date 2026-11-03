@@ -18,12 +18,14 @@ On your phone, tap **＋**. Your keyboard's mic button works there too.
 - Tick items on the list or right on its tile. Done ones fold away; tap **N done** to see them again.
 - Lines starting with `## ` make sections, each with its own count.
 - The deadline chip shows the days left and whether you're on track. Tap it to move the deadline.
-- The bell beside an item saves a time for it, shown as a small chip.
+- The bell beside an item sets a reminder for it, shown as a small chip.
+- A list with a deadline checks in once a day with how it's going. Tap its check-in chip to change the time, pause it or turn it off, or say **don't remind me about exam prep until monday**.
 - In the box or in chat, say **add optics to the exam prep list**.
 
 ## Finding things
 
-- **Today** shows what's due.
+- **Today** shows what needs you today, including dated items from your lists, and how each list is going.
+- **Reminders** shows everything with a time, day by day.
 - **All notes** shows everything, and **Inbox** holds what the app wasn't sure about. One tap files it.
 - **Collections** appear by themselves as you save more.
 - **List** or **Tiles** switches how notes look. Drag tiles into your own order.

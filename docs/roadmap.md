@@ -21,8 +21,8 @@ What gets built next, in order. Wider ideas live in
 2. **Finish to-do lists.** Done 2026-11-03: the To-do lists page, the list
    layout, capture chips, and lists in chat.
 3. **Links, as tiles.** See below.
-4. **Reminders and check-ins.** The reminders engine, daily check-ins ("unless
-   I ask you not to until a date"), and the Today and Reminders pages.
+4. **Reminders and check-ins.** Done 2026-11-03: item reminders, daily
+   check-ins with pause, deadline nudges, and the Today and Reminders pages.
 5. **Groups and repeating.** Lists inside lists; things that repeat.
 6. **Reminders with the page closed.** On the laptop first, and fix the server's
    occasional exit with code 4. On a phone this needs the secure link below.

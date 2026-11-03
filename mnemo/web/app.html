@@ -998,6 +998,10 @@ a.src-chip{text-decoration:none;color:inherit;max-width:240px}
 @media (max-width:1180px){:root{--sb-w:212px;--list-w:300px}.note-wrap{padding:28px 36px 100px}}
 .calm-motion *,.calm-motion *::before,.calm-motion *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 .calm-motion .caret{animation:none}
+.a-line{margin-top:3px;font-size:13px;line-height:1.45;color:var(--muted)}
+.a-line b{color:var(--text);font-weight:600}
+.more-link{display:flex;align-items:center;gap:6px;margin:12px 12px 4px;font-size:13px;font-weight:600;color:var(--accent-ink)}
+.more-link:hover{text-decoration:underline}
 /* To-do lists */
 .list-box{margin:4px 0 14px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface-2)}
 .lb-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
@@ -1410,7 +1414,8 @@ const api = {
   remove:   (id)          => LIVE ? httpPost('/api/note/delete', { id })   : mock.remove(id),
   discard:  (id)          => LIVE ? httpPost('/api/note/discard', { id })  : mock.discard(id),   // drop an untouched blank note
   move:     (id, topic)   => LIVE ? httpPost('/api/move', { id, topic })   : mock.move(id, topic),
-  reminded: (ids)         => LIVE ? httpPost('/api/reminded', { ids })     : mock.reminded(ids),
+  reminded: (keys)        => LIVE ? httpPost('/api/reminded', { keys })    : mock.reminded(keys.map((k) => k.split(':')[1])),
+  itemWhen: (p)           => LIVE ? httpPost('/api/list/item/when', p) : Promise.resolve({ ok: true }),
   undo:     ()            => LIVE ? httpPost('/api/undo', {})              : mock.undo(),
   // the AI box inside a note: {id, title, body, request, history, cursorLine} -> {action, reply, text, position}
   noteAi:   (p)           => LIVE ? httpPost('/api/note/ai', { ...p, web: webCfg() }) : mock.noteAi(p),
@@ -2492,7 +2497,7 @@ const S = {
   tiles: store.get('notes.tiles', {}),     // view key -> true when shown as tiles
   listClosed: false,             // never remembered: the list is open whenever the app starts
   colors: store.get('notes.colors.' + (LIVE ? 'live' : 'mock'), {}),
-  shownAlerts: new Set(),
+  shownAlerts: new Set(), alertData: new Map(),
   openNote: null,
 };
 const PALETTES = [{"id": "paper", "group": "calm", "name": "Paper", "sub": "Warm and calm. The default.", "swatch": ["#F7F5F0", "#4F52D9", "#161310", "#565DB8"]}, {"id": "sage", "group": "calm", "name": "Sage", "sub": "Soft greens, easy on the eyes", "swatch": ["#F2F5F0", "#2F7D4F", "#101511", "#2A7449"]}, {"id": "ocean", "group": "calm", "name": "Ocean", "sub": "Cool blues for focus", "swatch": ["#F2F5F8", "#1F6FD1", "#0E141B", "#2E69B2"]}, {"id": "peach", "group": "calm", "name": "Peach", "sub": "Warm and cosy", "swatch": ["#FBF4F0", "#C2412A", "#19120F", "#A94C2E"]}, {"id": "lilac", "group": "calm", "name": "Lilac", "sub": "Dreamy and soft", "swatch": ["#F6F3FA", "#7344D6", "#15121A", "#7355A9"]}, {"id": "graphite", "group": "calm", "name": "Graphite", "sub": "Quiet and neutral", "swatch": ["#F5F5F4", "#1F1F1E", "#141414", "#D7D7D7"]}, {"id": "candy", "group": "vibrant", "name": "Candy", "sub": "Bubblegum pink, full of energy", "swatch": ["#FFF4F8", "#D6246E", "#1A1115", "#B3346B"]}, {"id": "citrus", "group": "vibrant", "name": "Citrus", "sub": "Sunny yellow and orange", "swatch": ["#FFFBEB", "#C2410C", "#18130C", "#F4A437"]}, {"id": "electric", "group": "vibrant", "name": "Electric", "sub": "Bold cobalt blue", "swatch": ["#F3F6FF", "#2B44F0", "#0F1320", "#3B5BD4"]}, {"id": "lagoon", "group": "vibrant", "name": "Lagoon", "sub": "Tropical teal and aqua", "swatch": ["#EFFAF8", "#00796B", "#0A1616", "#077367"]}, {"id": "grape", "group": "vibrant", "name": "Grape", "sub": "Ultraviolet with a neon glow", "swatch": ["#F7F3FF", "#7C3AED", "#16111F", "#7B47BF"]}, {"id": "lime", "group": "vibrant", "name": "Lime", "sub": "Zesty, fresh green", "swatch": ["#F6FCE8", "#4D7C0F", "#12150C", "#A4D854"]}, {"id": "midnight", "group": "moody", "name": "Midnight", "sub": "City lights after dark", "swatch": ["#E9EAF0", "#2E5BD8", "#121525", "#4668B6"]}, {"id": "mocha", "group": "moody", "name": "Mocha", "sub": "Cosy pastels, warm and soft", "swatch": ["#EFF1F5", "#8839EF", "#151423", "#7B5A9F"]}, {"id": "rosewood", "group": "moody", "name": "Rosewood", "sub": "Muted rose, quiet and elegant", "swatch": ["#FAF4ED", "#A8566F", "#151121", "#91555E"]}, {"id": "arctic", "group": "moody", "name": "Arctic", "sub": "Frosty blue-grey calm", "swatch": ["#ECEFF4", "#3F6593", "#1C2530", "#39688E"]}, {"id": "neon", "group": "moody", "name": "Neon Night", "sub": "Hot pink on deep purple-grey", "swatch": ["#F8F8F2", "#C2187A", "#161724", "#AF3679"]}, {"id": "campfire", "group": "moody", "name": "Campfire", "sub": "Warm retro, like old paper", "swatch": ["#FBF1C7", "#AF3A03", "#18130D", "#EDB345"]}];
@@ -2701,9 +2706,11 @@ setTimeout(hideBoot, 5000);      // never left covering the page, whatever happe
 async function refresh(opts = {}) {
   try {
     const [st, ag] = await Promise.all([api.state(), api.agenda()]);
-    S.state = st; S.agenda = ag.notes || [];
+    // Lists show as lists, with their pace; their deadline isn't a reminder.
+    S.state = st; S.agenda = (ag.notes || []).filter((n) => n.kind !== 'list');
+    S.agendaItems = ag.items || []; S.agendaLists = ag.lists || []; S.anytime = ag.anytime || [];
     const now = new Date(), eod = addDays(sod(now), 1);
-    S.dueCount = S.agenda.filter((n) => !n.done && n.status !== 'archived' && new Date(n.due) < eod).length;
+    S.dueCount = agendaEntries().filter((n) => !n.done && n.when < eod).length;
     for (const t of flatTopics(st.tree)) sw(t.path);
     renderSidebar(); renderTryLine();
     await loadList();
@@ -2741,7 +2748,8 @@ async function loadList() {
 /* The ids visible in the list, in order — used for keyboard movement */
 function listIds() {
   const v = S.view;
-  if (v.type === 'today') { const g = groupAgenda(); return [...g.overdue, ...g.today, ...g.upcoming.flatMap((d) => d.items), ...(S.doneOpen ? g.done : [])].map((n) => n.id); }
+  if (v.type === 'today') { const g = groupAgenda(); return [...g.overdue, ...g.today, ...(S.doneOpen ? g.done : [])].map((n) => n.noteId || n.id); }
+  if (v.type === 'reminders') { const g = groupAgenda(); return [...g.overdue, ...g.today, ...g.tomorrow, ...g.week, ...g.later, ...(S.anytime || [])].map((n) => n.noteId || n.id); }
   if (v.type === 'inbox') return [...S.inbox.notes, ...S.inbox.review].map((n) => n.id);
   if (v.type === 'search') return S.hits.map((h) => h.id);
   return S.list.map((n) => n.id);
@@ -2800,6 +2808,7 @@ function renderSidebar() {
   $('#sidebar').innerHTML = `
     <button class="btn new-note" data-act="new-note"${S.sbCollapsed ? ' title="New note (Alt+N)"' : ''}>${icon('plus', 16)}<span class="nl">New note</span><kbd>Alt N</kbd></button>
     ${nav('today', 'Today', 'sun', S.dueCount || '', S.dueCount ? 'due' : '')}
+    ${nav('reminders', 'Reminders', 'bell')}
     ${nav('all', 'All notes', 'notes', total || '')}
     ${nav('inbox', 'Inbox', 'inbox', st.inbox || '')}
     ${nav('lists', 'To-do lists', 'task')}
@@ -3017,17 +3026,30 @@ function collHTML(n, depth) {
 /* =====================================================================
    List column
    ===================================================================== */
+// Everything with a time: single reminders, and to-do items with a ⏰ or a 📅.
+// An item with only a date counts until the end of its day.
+function agendaEntries() {
+  const notes = S.agenda.filter((n) => n.status !== 'archived' && n.due).map((n) => ({ ...n, when: new Date(n.due) }));
+  const items = (S.agendaItems || []).map((i) => {
+    const when = i.remind ? new Date(i.remind) : at(localDay(i.day), 23, 59);
+    return { item: true, id: `item:${i.noteId}:${i.line}`, noteId: i.noteId, line: i.line, text: i.text, title: i.text,
+      listTitle: i.listTitle, done: i.done, day: i.day, repeat: i.repeat, timed: !!i.remind, when, due: toISO(when) };
+  });
+  return [...notes, ...items].sort((a, b) => a.when - b.when);
+}
 function groupAgenda() {
   const now = new Date(), eod = addDays(sod(now), 1);
-  const items = S.agenda.filter((n) => n.status !== 'archived' && n.due).sort((a, b) => new Date(a.due) - new Date(b.due));
-  const g = { overdue: [], today: [], upcoming: [], done: [] };
+  const g = { overdue: [], today: [], upcoming: [], done: [], tomorrow: [], week: [], later: [] };
   const days = new Map();
-  for (const n of items) {
-    const d = new Date(n.due);
-    if (n.done) { if (dayDiff(d) >= -1 && dayDiff(d) <= 0 || dayDiff(n.updated || d) === 0) g.done.push(n); continue; }
+  for (const n of agendaEntries()) {
+    const d = n.when;
+    if (n.done) { if (n.item || (dayDiff(d) >= -1 && dayDiff(d) <= 0) || dayDiff(n.updated || d) === 0) g.done.push(n); continue; }
     if (d < now) g.overdue.push(n);
     else if (d < eod) g.today.push(n);
-    else { const k = sod(d).getTime(); if (!days.has(k)) days.set(k, []); days.get(k).push(n); }
+    else {
+      const k = sod(d).getTime(); if (!days.has(k)) days.set(k, []); days.get(k).push(n);
+      (dayDiff(d) === 1 ? g.tomorrow : dayDiff(d) <= 7 ? g.week : g.later).push(n);
+    }
   }
   g.upcoming = [...days.entries()].map(([k, items]) => ({ label: dayHeading(new Date(k)), items }));
   return g;
@@ -3057,7 +3079,7 @@ function rowHTML(n, opts = {}) {
 
 function todayRowHTML(n, group) {
   const sel = S.sel === n.id;
-  const t = group === 'today' ? fmtTime(n.due) : group === 'overdue' ? fmtRel(n.due) : fmtTime(n.due);
+  const t = !n.due ? '' : group === 'overdue' ? fmtRel(n.due) : group === 'week' || group === 'later' ? fmtAbs(n.due) : fmtTime(n.due);
   return `<div class="row today-row ${sw(n.topic)} ${sel ? 'is-sel' : ''} ${n.done ? 'is-done' : ''}" data-row="${esc(n.id)}" role="listitem">
     <button class="check ${n.done ? 'is-checked' : ''}" data-act="check" data-id="${esc(n.id)}" role="checkbox" aria-checked="${!!n.done}" aria-label="Done: ${esc(n.title)}">${icon('check', 12)}</button>
     <button class="row-open" data-act="open" data-id="${esc(n.id)}" ${sel ? 'aria-current="true"' : ''}>
@@ -3070,6 +3092,35 @@ function todayRowHTML(n, group) {
   </div>`;
 }
 
+function entryRowHTML(n, group) { return n.item ? itemRowHTML(n, group) : todayRowHTML(n, group); }
+// A to-do item on Today or Reminders: tick it here, or open its list.
+function itemRowHTML(e, group) {
+  const t = !e.timed ? (group === 'today' ? 'Today' : dayLabel(e.when))
+    : group === 'overdue' ? fmtRel(e.when) : group === 'week' || group === 'later' ? fmtAbs(e.when) : fmtTime(e.when);
+  const data = `data-note="${esc(e.noteId)}" data-line="${e.line}" data-text="${esc(e.text)}"`;
+  return `<div class="row today-row item-row ${e.done ? 'is-done' : ''}" data-row="${esc(e.noteId)}" role="listitem">
+    <button class="check ${e.done ? 'is-checked' : ''}" data-act="item-check" ${data} role="checkbox" aria-checked="${!!e.done}" aria-label="Done: ${esc(e.text)}">${icon('check', 12)}</button>
+    <button class="row-open" data-act="open" data-id="${esc(e.noteId)}">
+      <span class="row-body">
+        <span class="row-title">${esc(e.text)}</span>
+        <span class="row-sub"><span class="row-due ${group === 'overdue' ? 'is-over' : ''}">${icon(e.timed ? 'bell' : 'clock', 12)}${esc(t)}</span><span class="coll-mini">${icon('task', 11)}${esc(e.listTitle)}</span></span>
+      </span>
+    </button>
+    ${e.done ? '<span></span>' : `<button class="icon-btn sm snooze-btn" data-act="item-snooze" ${data} aria-label="Snooze ${esc(e.text)}" title="Snooze">${icon('snooze', 15)}</button>`}
+  </div>`;
+}
+// A list's line on Today: how it's going, from the same facts as its check-in.
+function todayListHTML(l) {
+  return listRowHTML({ id: l.noteId, title: l.title, due: l.due, list: { done: l.done, total: l.total, next: l.next, pace: l.pace } });
+}
+// What a check-in or deadline alert says, gently.
+function checkinWords(r) {
+  const p = r.pace || {}, nx = r.next ? ` Next up: <b>${esc(r.next)}</b>` : '';
+  const when = p.daysLeft === 1 ? "Today's the deadline. " : p.daysLeft === 2 ? "Tomorrow's the deadline. " : '';
+  if (p.state === 'behind') return `${when}A bit behind: about ${p.perDay} a day would catch up.${nx}`;
+  if (p.state === 'on_track') return `${when}About ${p.perDay} a day keeps you on track.${nx}`;
+  return `${when}${p.left || r.total - r.done} to go.${nx}`;
+}
 function inboxRowHTML(n, review) {
   const sel = S.sel === n.id;
   const pills = suggestionPills(n, review);
@@ -3102,14 +3153,24 @@ function renderList() {
   let head = '', body = '';
   if (v.type === 'today') {
     const g = groupAgenda(), d = new Date();
-    const sub = [g.overdue.length ? `${g.overdue.length} overdue` : '', g.today.length ? `${g.today.length} later today` : '', g.upcoming.length ? `${g.upcoming.reduce((a, x) => a + x.items.length, 0)} coming up` : ''].filter(Boolean).join(' · ');
+    const coming = g.upcoming.reduce((a, x) => a + x.items.length, 0), lists = S.agendaLists || [];
+    const sub = [g.overdue.length ? `${g.overdue.length} overdue` : '', g.today.length ? `${g.today.length} later today` : ''].filter(Boolean).join(' · ');
     head = `<h2>Today</h2><p>${WDL[d.getDay()]} ${d.getDate()} ${MONL[d.getMonth()]}${sub ? ' · ' + sub : ''}</p>`;
-    const sec = (label, cls, items, grp) => items.length ? `<div class="group-label ${cls}">${label}</div>${items.map((n) => todayRowHTML(n, grp)).join('')}` : '';
+    const sec = (label, cls, items, grp) => items.length ? `<div class="group-label ${cls}">${label}</div>${items.map((n) => entryRowHTML(n, grp)).join('')}` : '';
+    // What needs you today. What's further off waits on the Reminders page.
     body = sec('Overdue', 'over', g.overdue, 'overdue')
       + (g.today.length ? sec('Today', '', g.today, 'today') : `<div class="group-label">Today</div><div class="list-empty" style="padding:6px 12px 10px">Nothing else today.</div>`)
-      + g.upcoming.map((x) => sec(x.label, '', x.items, 'upcoming')).join('')
-      + (g.done.length ? `<div class="group-label"><button data-act="toggle-done" aria-expanded="${S.doneOpen}">${icon(S.doneOpen ? 'chev-down' : 'chev-right', 13)}Done · ${g.done.length}</button></div>${S.doneOpen ? g.done.map((n) => todayRowHTML(n, 'done')).join('') : ''}` : '');
-    if (!g.overdue.length && !g.today.length && !g.upcoming.length) body = `<div class="list-empty">Nothing is coming up. Say “remind me…” in the box above to add something.</div>` + body;
+      + (lists.length ? `<div class="group-label">Your lists</div>${lists.map(todayListHTML).join('')}` : '')
+      + (coming ? `<button class="more-link" data-act="nav" data-v="reminders">${icon('bell', 13)}${coming} coming up · See Reminders${icon('chev-right', 13)}</button>` : '')
+      + (g.done.length ? `<div class="group-label"><button data-act="toggle-done" aria-expanded="${S.doneOpen}">${icon(S.doneOpen ? 'chev-down' : 'chev-right', 13)}Done · ${g.done.length}</button></div>${S.doneOpen ? g.done.map((n) => entryRowHTML(n, 'done')).join('') : ''}` : '');
+    if (!g.overdue.length && !g.today.length && !coming && !lists.length) body = `<div class="list-empty">Nothing is coming up. Say “remind me…” in the box above to add something.</div>` + body;
+  } else if (v.type === 'reminders') {
+    const g = groupAgenda(), any = S.anytime || [];
+    head = `<h2>${icon('bell', 18)}Reminders</h2><p>Everything with a time, by day</p>`;
+    const sec = (label, cls, items, grp) => items.length ? `<div class="group-label ${cls}">${label}</div>${items.map((n) => entryRowHTML(n, grp)).join('')}` : '';
+    body = sec('Overdue', 'over', g.overdue, 'overdue') + sec('Today', '', g.today, 'today') + sec('Tomorrow', '', g.tomorrow, 'upcoming')
+      + sec('This week', '', g.week, 'week') + sec('Later', '', g.later, 'later') + sec('Anytime', '', any, 'anytime')
+      || `<div class="list-empty">No reminders yet. Say “remind me to call mom friday at 5” in the box above.</div>`;
   } else if (v.type === 'inbox') {
     const { notes, review } = S.inbox;
     head = `<h2>Inbox</h2><p>Things I wasn't sure about. One click files them.</p>`;
@@ -3157,7 +3218,7 @@ function renderList() {
 
 /* ---------- To-do lists ---------- */
 function listRowHTML(n) {
-  const l = n.list || {}, sel = S.sel === n.id, p = listPace(l.done || 0, l.total || 0, n.due, n.created);
+  const l = n.list || {}, sel = S.sel === n.id, p = l.pace || listPace(l.done || 0, l.total || 0, n.due, n.created);
   const pct = l.total ? Math.round((100 * l.done) / l.total) : 0;
   const due = n.due ? `<span class="row-due${new Date(n.due) < sod(new Date()) && p.state !== 'done' ? ' over' : ''}">${esc(daysLeftWords(n.due))}</span>` : '';
   return `<div class="row list-row ${sw(n.topic)} ${sel ? 'is-sel' : ''} ${p.state === 'done' ? 'is-done' : ''}" data-row="${esc(n.id)}" role="listitem">
@@ -3185,7 +3246,11 @@ function renderListBox() {
     ? `<button class="chip ${p.state === 'late' ? 'over' : 'accent'}" data-act="list-due" data-id="${esc(n.id)}" title="Move the deadline">${icon('clock', 13)}<span class="lbl">Due ${esc(dayLabel(n.due))}</span><span style="font-weight:500">· ${esc(daysLeftWords(n.due))}</span>${icon('chev-down', 12)}</button>`
     : `<button class="chip quiet" data-act="list-due" data-id="${esc(n.id)}">${icon('clock', 13)}Add a deadline</button>`;
   const move = p.state === 'behind' || p.state === 'late' ? `<button class="btn sm" data-act="list-due" data-id="${esc(n.id)}">Move the deadline</button>` : '';
-  box.innerHTML = `<div class="lb-row">${chip}</div>
+  const l = n.list || {}, paused = l.quietUntil && localDay(l.quietUntil) > sod(new Date());
+  const ci = paused ? `${icon('snooze', 13)}<span class="lbl">Paused until ${esc(dayLabel(localDay(l.quietUntil)))}</span>`
+    : l.checkin ? `${icon('bell', 13)}<span class="lbl">Checks in daily · ${esc(fmtTime(at(new Date(), ...hm(l.checkin))))}</span>` : `${icon('bell', 13)}Daily check-in: off`;
+  const checkin = `<button class="chip ${l.checkin && !paused ? 'accent' : 'quiet'}" data-act="list-checkin" title="Daily check-in">${ci}${icon('chev-down', 12)}</button>`;
+  box.innerHTML = `<div class="lb-row">${chip}${checkin}</div>
     ${total ? `<div class="lb-prog"><span class="bar"><span style="width:${Math.round((100 * done) / total)}%"></span></span><span>${done} of ${total} done</span></div>` : ''}
     <p class="lb-pace">${paceHTML(p, next ? stripTokens(next[3] || '') : '')}${move}</p>`;
   Ed.el?.classList.toggle('fold-done', !S.showDone);
@@ -4208,31 +4273,91 @@ function snoozeItems() {
    ===================================================================== */
 async function pollDue() {
   try {
-    const { notes = [] } = await api.due();
-    const fresh = notes.filter((n) => !S.shownAlerts.has(n.id));
+    const d = await api.due();
+    const list = d.reminders || (d.notes || []).map((n) => ({ type: 'task', key: 'task:' + n.id, noteId: n.id, title: n.title, when: n.due, topic: n.topic }));
+    const fresh = list.filter((r) => !S.shownAlerts.has(r.key));
     if (!fresh.length) return;
-    fresh.forEach((n) => { S.shownAlerts.add(n.id); showAlert(n); osNotify(n); });
-    api.reminded(fresh.map((n) => n.id)).catch(() => {});
+    fresh.forEach((r) => { S.shownAlerts.add(r.key); S.alertData.set(r.key, r); showAlert(r); osNotify(r); });
+    api.reminded(fresh.map((r) => r.key)).catch(() => {});
+    if (fresh.some((r) => r.type !== 'task')) softRefresh();
   } catch {}
 }
-function showAlert(n) {
-  const box = $('#alerts');
-  const over = new Date(n.due) < new Date(Date.now() - 6e4);
-  const el = document.createElement('div');
-  el.className = 'alert ' + sw(n.topic); el.dataset.alert = n.id; el.setAttribute('role', 'alertdialog'); el.setAttribute('aria-label', 'Reminder: ' + (n.title || ''));
-  el.innerHTML = `<div class="alert-top"><span class="a-ico" aria-hidden="true">${icon('bell', 18)}</span><div style="min-width:0;flex:1"><div class="a-kind">Reminder${n.topic ? ' · ' + esc(topicName(n.topic)) : ''}</div><div class="a-title">${esc(n.title || 'Untitled')}</div><div class="a-time ${over ? 'over' : ''}">${over ? 'Was due ' + esc(fmtRel(n.due).toLowerCase()) : esc(fmtRel(n.due))}</div></div><button class="icon-btn sm a-x" data-act="alert-close" data-id="${esc(n.id)}" aria-label="Dismiss reminder">${icon('x', 14)}</button></div>
-    <div class="alert-acts"><button class="btn sm primary" data-act="alert-done" data-id="${esc(n.id)}">${icon('check', 14)}Done</button><button class="btn sm outline" data-act="alert-snooze" data-v="10" data-id="${esc(n.id)}">Snooze 10 min</button><button class="btn sm outline" data-act="alert-snooze" data-v="60" data-id="${esc(n.id)}">Snooze 1 h</button><button class="btn sm" data-act="alert-open" data-id="${esc(n.id)}">Open</button></div>`;
+// Each kind of reminder gets its own card: a single reminder or a to-do item,
+// a list's daily check-in, or its deadline.
+function showAlert(r) {
+  const box = $('#alerts'), el = document.createElement('div');
+  const btn = (act, label, cls = 'outline', extra = '') => `<button class="btn sm ${cls}" data-act="${act}"${extra}>${label}</button>`;
+  let ico = 'bell', kind, title, lines = '', acts;
+  if (r.type === 'task' || r.type === 'item') {
+    const over = new Date(r.when) < new Date(Date.now() - 6e4);
+    kind = r.type === 'item' ? `Reminder · ${esc(r.listTitle)}` : `Reminder${r.topic ? ' · ' + esc(topicName(r.topic)) : ''}`;
+    title = r.type === 'item' ? r.text : r.title;
+    lines = `<div class="a-time ${over ? 'over' : ''}">${over ? 'Was due ' + esc(fmtRel(r.when).toLowerCase()) : esc(fmtRel(r.when))}</div>`;
+    acts = btn('alert-done', icon('check', 14) + 'Done', 'primary') + btn('alert-snooze', 'Snooze 10 min', 'outline', ' data-v="10"') + btn('alert-snooze', 'Snooze 1 h', 'outline', ' data-v="60"') + btn('alert-open', 'Open', '');
+  } else if (r.type === 'checkin') {
+    ico = 'task'; kind = 'Check-in'; title = r.title;
+    lines = `<div class="a-line">${r.done} of ${r.total} done${r.due ? ' · ' + esc(daysLeftWords(r.due)) : ''}</div><div class="a-line">${checkinWords(r)}</div>`;
+    acts = btn('alert-open', 'Open', 'primary') + btn('alert-close', 'Done for today') + btn('alert-pause', 'Pause until…') + btn('alert-checkin-off', 'Turn off', '');
+  } else {
+    ico = 'clock'; kind = r.late ? 'Past the deadline' : "Tomorrow's the deadline"; title = r.title;
+    lines = `<div class="a-line">${r.done} of ${r.total} done · ${r.total - r.done} to go</div><div class="a-line">${r.late ? 'Move the deadline, or keep going at your own pace.' : checkinWords(r)}</div>`;
+    acts = (r.late ? btn('alert-move', 'Move the deadline', 'primary') + btn('alert-open', 'Open') : btn('alert-open', 'Open', 'primary')) + btn('alert-close', 'Close', '');
+  }
+  el.className = 'alert ' + sw(r.topic || null); el.dataset.alert = r.key;
+  el.setAttribute('role', 'alertdialog'); el.setAttribute('aria-label', `${kind.replace(/<[^>]+>/g, '')}: ${title || ''}`);
+  el.innerHTML = `<div class="alert-top"><span class="a-ico" aria-hidden="true">${icon(ico, 18)}</span><div style="min-width:0;flex:1"><div class="a-kind">${kind}</div><div class="a-title">${esc(title || 'Untitled')}</div>${lines}</div><button class="icon-btn sm a-x" data-act="alert-close" aria-label="Dismiss">${icon('x', 14)}</button></div>
+    <div class="alert-acts">${acts}</div>`;
   box.prepend(el);
 }
 /* While the page sits in a background tab, the in-page card goes unseen, so
    a system notification goes out too (only if the user allowed them). */
-function osNotify(n) {
+function osNotify(r) {
   if (!document.hidden || !('Notification' in window) || Notification.permission !== 'granted') return;
+  const title = r.type === 'item' ? r.text : r.type === 'checkin' ? `Check-in · ${r.title}` : r.type === 'deadline' ? `${r.late ? 'Past the deadline' : "Tomorrow's the deadline"} · ${r.title}` : r.title;
+  const body = r.type === 'checkin' || r.type === 'deadline' ? `${r.done} of ${r.total} done` : fmtRel(r.when);
   try {
-    const x = new Notification(n.title || 'Reminder', { body: fmtRel(n.due), tag: n.id });
-    x.onclick = () => { window.focus(); openNote(n.id); x.close(); };
+    const x = new Notification(title || 'Reminder', { body, tag: r.key });
+    x.onclick = () => { window.focus(); openNote(r.noteId); x.close(); };
   } catch {}
 }
+// The reminder a button in an alert card belongs to, closing the card.
+function alertOf(el, keep) {
+  const box = el.closest('.alert'), r = box && S.alertData.get(box.dataset.alert);
+  if (!keep) box?.remove();
+  return r;
+}
+async function tickItem(noteId, line, text, done) {
+  const open = S.openNote && S.openNote.id === noteId;
+  if (open) await Ed.flush();
+  try { await busy(() => api.listItem(noteId, line, text, done)); }
+  catch { toast({ icon: 'x', msg: 'That item changed. Open its list to see it.', sw: 'sw-tangerine' }); }
+  if (open) await renderDetail();
+  await refresh();
+}
+async function setItemTime(e, when) {
+  const open = S.openNote && S.openNote.id === e.noteId;
+  if (open) await Ed.flush();
+  try { await busy(() => api.itemWhen({ id: e.noteId, line: e.line, text: e.text, remind: when ? toISO(when) : null, due: e.day || null, repeat: e.repeat || null })); }
+  catch { toast({ icon: 'x', msg: 'That item changed. Open its list to see it.', sw: 'sw-tangerine' }); return; }
+  toast({ icon: 'snooze', msg: `Snoozed · <b>${esc(fmtAbs(when))}</b>`, actions: [{ label: 'Undo', act: 'undo' }] });
+  if (open) await renderDetail();
+  await refresh();
+}
+async function setListSetting(id, fields, msg) {
+  if (S.openNote && S.openNote.id === id) await Ed.flush();
+  try { await busy(() => api.listSettings({ id, ...fields })); }
+  catch { toast({ icon: 'x', msg: "Couldn't change that just now.", sw: 'sw-tangerine' }); return; }
+  if (msg) toast({ icon: 'bell', msg, actions: [{ label: 'Undo', act: 'undo' }] });
+  if (S.sel === id) await renderDetail();
+  softRefresh();
+}
+function pauseItems() {
+  const now = new Date(), mon = addDays(now, ((8 - now.getDay()) % 7) || 7);
+  const pick = (label, d) => ({ label, value: d, hint: dayLabel(d) });
+  return [pick('Tomorrow', addDays(now, 1)), pick('Monday', mon), pick('In a week', addDays(now, 7)), { dt: true }];
+}
+/* While the page sits in a background tab, the in-page card goes unseen, so
+   a system notification goes out too (only if the user allowed them). */
 function askNotify() {
   if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission().catch(() => {});
 }
@@ -4554,10 +4679,46 @@ const ACTS = {
   'toast-move': (el) => moveNote(el.dataset.id, el),
   'toast-open': (el) => { closeToast(el.dataset.toast); openNote(el.dataset.id); },
   'toast-close': (el) => closeToast(el.dataset.toast),
-  'alert-done': async (el) => { closeAlert(el.dataset.id); completeNote(el.dataset.id, true); },
-  'alert-snooze': async (el) => { const m = +el.dataset.v; closeAlert(el.dataset.id); S.shownAlerts.delete(el.dataset.id); setDue(el.dataset.id, new Date(Date.now() + m * 6e4), 'Snoozed', true); },
-  'alert-open': (el) => { closeAlert(el.dataset.id); if (S.view.type !== 'today') go({ type: 'today' }, { sel: el.dataset.id }).then(() => $('#noteTitle')?.focus()); else openNote(el.dataset.id, { focusTitle: true }); },
-  'alert-close': (el) => closeAlert(el.dataset.id),
+  'alert-done': async (el) => { const r = alertOf(el); if (!r) return; if (r.type === 'item') tickItem(r.noteId, r.line, r.text, true); else completeNote(r.noteId, true); },
+  'alert-snooze': async (el) => { const r = alertOf(el); if (!r) return; const when = new Date(Date.now() + +el.dataset.v * 6e4); if (r.type === 'item') setItemTime(r, when); else setDue(r.noteId, when, 'Snoozed', true); },
+  'alert-open': (el) => { const r = alertOf(el); if (r) openNote(r.noteId); },
+  'alert-close': (el) => { alertOf(el); },
+  'alert-pause': async (el) => {
+    const r = alertOf(el, true); if (!r) return;
+    const v = await openMenu(el, { title: 'No check-ins until', items: pauseItems() }); if (v === undefined) return;
+    alertOf(el); setListSetting(r.noteId, { quiet_until: toISO(v).slice(0, 10) }, `No check-ins from <b>${esc(r.title)}</b> until ${esc(dayLabel(v))}`);
+  },
+  'alert-checkin-off': (el) => { const r = alertOf(el); if (r) setListSetting(r.noteId, { checkin: '' }, `Check-ins off for <b>${esc(r.title)}</b>`); },
+  'alert-move': async (el) => {
+    const r = alertOf(el, true); if (!r) return;
+    const v = await openMenu(el, { title: 'Move the deadline', items: deadlineItems(true) }); if (v === undefined) return;
+    alertOf(el); setListSetting(r.noteId, { due: v === 'remove' ? null : toISO(v) }, v === 'remove' ? 'No deadline now' : `Deadline: <b>${esc(dayLabel(v))}</b>`);
+  },
+  'item-check': async (el) => {
+    const on = el.getAttribute('aria-checked') !== 'true'; buzz();
+    el.classList.toggle('is-checked', on); el.setAttribute('aria-checked', String(on));
+    await wait(260); tickItem(el.dataset.note, +el.dataset.line, el.dataset.text, on);
+  },
+  'item-snooze': async (el) => {
+    const e = (S.agendaItems || []).find((i) => i.noteId === el.dataset.note && i.line === +el.dataset.line); if (!e) return;
+    const v = await openMenu(el, { title: 'Snooze until', items: snoozeItems() });
+    if (v) setItemTime(e, v);
+  },
+  'list-checkin': async (el) => {
+    const n = S.openNote; if (!n) return;
+    const l = n.list || {}, paused = l.quietUntil && localDay(l.quietUntil) > sod(new Date());
+    const times = ['08:00', '09:00', '12:00', '18:00', '20:00'].map((t) => ({ label: fmtTime(at(new Date(), ...hm(t))), value: 'time:' + t, hint: l.checkin === t ? 'In use' : '' }));
+    const items = paused ? [{ label: 'Check in again from tomorrow', value: 'resume', icon: 'bell' }, { sep: true }] : [];
+    items.push({ heading: l.checkin ? 'Check in daily at' : 'Check in daily' }, ...times);
+    const [d1, d2, d3] = pauseItems(), pause = (label, x) => ({ label, hint: x.hint, value: 'pause:' + toISO(x.value).slice(0, 10) });
+    if (l.checkin && !paused) items.push({ sep: true }, pause('Pause until tomorrow', d1), pause('Pause until Monday', d2), pause('Pause for a week', d3));
+    if (l.checkin) items.push({ sep: true }, { label: 'Turn off check-ins', value: 'off', icon: 'x' });
+    const v = await openMenu(el, { title: 'Daily check-in', items }); if (!v) return;
+    if (v === 'off') return setListSetting(n.id, { checkin: '' }, 'Check-ins off');
+    if (v === 'resume') return setListSetting(n.id, { quiet_until: null }, 'Check-ins back on');
+    if (v.startsWith('pause:')) return setListSetting(n.id, { quiet_until: v.slice(6) }, `No check-ins until ${esc(dayLabel(localDay(v.slice(6))))}`);
+    setListSetting(n.id, { checkin: v.slice(5), quiet_until: null }, `Checks in daily at <b>${esc(fmtTime(at(new Date(), ...hm(v.slice(5)))))}</b>`);
+  },
   'tidy-accept': async (el) => {
     try { await busy(() => api.gardenApply(el.dataset.id)); }
     catch (err) { toast({ icon: 'x', sw: 'sw-tangerine', msg: `Couldn't do that one.${err.reason ? ` <span class="t-sub">${esc(err.reason)}</span>` : ''}` }); return renderWide(); }

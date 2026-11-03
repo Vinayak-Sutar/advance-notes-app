@@ -722,15 +722,22 @@ class Handler(BaseHTTPRequestHandler):
 
         if route == "/api/agenda":
             rows = N.agenda(conn)
-            return self._json({"notes": [_note_brief(conn, r) for r in rows]})
+            anytime = conn.execute(
+                "SELECT n.* FROM notes n WHERE n.kind = 'task' AND n.due_at IS NULL AND n.status = 'open'"
+                f" ORDER BY {N.ORDER}").fetchall()
+            return self._json({"notes": [_note_brief(conn, r) for r in rows],
+                               "items": Rem.agenda_items(conn), "lists": Rem.active_lists(conn),
+                               "anytime": [_note_brief(conn, r) for r in anytime]})
 
         if route == "/api/due":
             # Polled by the page so a reminder can surface while it is open.
             # Reminder times are wall-clock local time, so compare with local
             # now -- UTC here made reminders fire hours late east of Greenwich.
-            from .db import local_now_iso
-            rows = N.due_soon(conn, local_now_iso())
-            return self._json({"notes": [_note_brief(conn, r) for r in rows]})
+            reminders = Rem.due_now(conn)
+            for r in reminders:
+                if r["type"] == "task":
+                    r["topic"] = T.path_of(conn, N.primary_topic(conn, r["noteId"]))
+            return self._json({"reminders": reminders})
 
         if route == "/api/resolve":
             phrase = (query.get("q") or [""])[0]
@@ -906,6 +913,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(engine.delete_note(payload["id"]))
 
         if route == "/api/reminded":
+            # {keys}: what the page has just shown, so none of it fires twice.
+            Rem.mark(conn, [k for k in payload.get("keys") or [] if isinstance(k, str)])
             for note_id in payload.get("ids") or []:
                 N.mark_reminded(conn, note_id)
             return self._json({"ok": True})

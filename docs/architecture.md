@@ -242,8 +242,16 @@ writes them; the page mirrors those rules, and so do the capture box's chips.
   the deadline, progress and pace, section counts, item chips with a bell, and
   done items folded away. Pace wording is gentle on purpose.
 - **The AI box in a note** puts back any marks a rewrite drops.
-- **Not yet:** item reminders and daily check-ins are saved but don't alert;
-  that's roadmap step 4. Groups and repeating are step 5.
+- **Reminders** (`mnemo/reminders.py`): `due_now()` decides what speaks up,
+  each with a key in `reminder_log` so it fires once: single reminders, items'
+  ⏰, one check-in per list per day at its time, "tomorrow's the deadline" for
+  lists without check-ins, and one "past the deadline", after which the daily
+  nudges stop. Paused lists stay quiet; a list in a group speaks through the
+  group. The page polls `/api/due` and shows a card for each kind; `/api/agenda`
+  feeds Today (what needs you today, and each list's pace) and the Reminders
+  page (by day, plus undated to-dos). A rebuild marks what's already past.
+- **Not yet:** alerts appear only while a page is open (roadmap step 6), and
+  groups and repeating are step 5.
 
 ## Phones over Wi-Fi
 
