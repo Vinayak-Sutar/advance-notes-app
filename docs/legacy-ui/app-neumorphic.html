@@ -1,0 +1,1240 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notes</title>
+<script>try{var t=localStorage.getItem("mnemo-theme");
+if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<style>
+  /* ===========================================================
+     Neumorphism.
+
+     One idea runs through the whole style: every surface is the SAME colour
+     as the page, and shape comes only from a pair of shadows -- light from
+     the top-left, dark from the bottom-right. Raised things cast them
+     outward; pressed or recessed things cast them inward (inset).
+
+     The known cost is contrast: with no colour difference between a control
+     and its background, edges are soft and affordances faint. So contrast is
+     kept where it matters -- text, the accent colour, focus rings -- and the
+     embossed treatment is reserved for chrome and controls. Long lists stay
+     flat, because 200 embossed rows is noise rather than depth.
+     =========================================================== */
+  :root{
+    --bg:#e6ebf2;
+    --shadow-dark:#c2cad8;
+    --shadow-light:#ffffff;
+
+    /* Every text colour clears 4.5:1 against --bg. The first draft did not:
+       dates and counts sat at 2.4:1 and due-date amber at 2.4:1, which is the
+       standard way neumorphism fails -- soft everything, including the text. */
+    --fg:#2c3440;  --fg-2:#56627a;  --fg-3:#5e687b;
+    --accent:#6b7ce0;  --accent-2:#4c5bc7;  --accent-dim:#6b7ce016;
+    --ok:#1b7552;  --ok-dim:#1b755216;
+    --warn:#94590a;  --warn-dim:#94590a16;
+    --danger:#b8384d;
+
+    /* still read by the graph canvas and a few inline styles in the script */
+    --line:#cfd6e2;  --line-2:#bcc5d4;  --raised:var(--bg);
+    --panel:var(--bg);  --hover:#dde3ec;
+
+    --r:14px; --r-lg:20px; --r-pill:999px;
+    --mono:ui-monospace,"Cascadia Mono","SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+
+    --up:6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
+    --up-sm:3px 3px 7px var(--shadow-dark), -3px -3px 7px var(--shadow-light);
+    --up-lg:10px 10px 22px var(--shadow-dark), -10px -10px 22px var(--shadow-light);
+    --in:inset 4px 4px 9px var(--shadow-dark), inset -4px -4px 9px var(--shadow-light);
+    --in-sm:inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+    --ring:0 0 0 2px var(--accent);
+  }
+  html[data-theme="dark"]{
+    --bg:#2a2e36;
+    --shadow-dark:#1d2026;
+    --shadow-light:#373c46;
+    --fg:#e4e8ef;  --fg-2:#a6afbe;  --fg-3:#959eae;
+    --accent:#8795ef;  --accent-2:#a3aef7;  --accent-dim:#8795ef1f;
+    --ok:#4bc294;  --ok-dim:#4bc29420;
+    --warn:#e0a14a;  --warn-dim:#e0a14a20;
+    --danger:#ee6e82;
+    --line:#343a44;  --line-2:#3e4550;  --hover:#30353e;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--fg);font-family:var(--sans);
+    font-size:14px;height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;
+    transition:background .3s,color .3s}
+  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+  input,textarea{font:inherit;color:inherit;background:none;border:none;outline:none}
+  a{color:var(--accent-2)}
+  ::selection{background:var(--accent-dim)}
+  ::-webkit-scrollbar{width:12px;height:12px}
+  ::-webkit-scrollbar-thumb{background:var(--shadow-dark);border-radius:var(--r-pill);
+    border:4px solid var(--bg)}
+  ::-webkit-scrollbar-track{background:transparent}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  /* ============ capture ============ */
+  .cap-wrap{padding:16px 20px 14px;background:var(--bg)}
+  .cap{max-width:940px;margin:0 auto;background:var(--bg);
+    border-radius:var(--r-lg);box-shadow:var(--in);transition:box-shadow .22s ease}
+  .cap.focus{box-shadow:var(--in), var(--ring)}
+  .cap.drag{box-shadow:var(--in), 0 0 0 2px var(--ok)}
+  .cap-row{display:flex;align-items:flex-start;gap:12px;padding:13px 18px}
+  .cap-row .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);
+    box-shadow:var(--up-sm);margin-top:8px;flex:none;opacity:.85}
+  #cap{flex:1;font-size:14.5px;line-height:1.6;resize:none;max-height:190px;
+    overflow-y:auto;height:24px;display:block}
+  #cap::placeholder{color:var(--fg-3)}
+  #cap:focus-visible{outline:none}
+  .cap-foot{display:flex;align-items:center;gap:8px;padding:0 18px 11px 39px;
+    font-size:11.5px;color:var(--fg-3);min-height:20px}
+  .cap-foot .k{font-family:var(--mono);font-size:10px;border-radius:6px;
+    padding:3px 7px;background:var(--bg);box-shadow:var(--up-sm)}
+  .cap-foot .sp{margin-left:auto}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{font-size:11px;padding:4px 11px;border-radius:var(--r-pill);
+    color:var(--fg-2);background:var(--bg);box-shadow:var(--up-sm);
+    display:inline-flex;align-items:center;gap:5px}
+  .chip.topic{color:var(--accent-2)}
+  .chip.time{color:var(--warn)}
+  .chip.append{color:var(--ok)}
+
+  /* ============ shell: three raised panels on one surface ============ */
+  .shell{display:flex;height:calc(100vh - var(--capH,110px) - 26px);
+    padding:4px 16px 12px;gap:16px}
+  .side{width:232px;flex:none;display:flex;flex-direction:column;overflow:hidden;
+    background:var(--bg);border-radius:var(--r-lg);box-shadow:var(--up);padding:6px 0}
+  .newwrap{padding:12px 12px 8px}
+  .newbtn{width:100%;display:flex;align-items:center;gap:9px;padding:11px 14px;
+    border-radius:var(--r);background:var(--bg);color:var(--accent-2);
+    font-weight:650;font-size:13px;box-shadow:var(--up);transition:box-shadow .18s}
+  .newbtn:hover{box-shadow:var(--up-lg)}
+  .newbtn:active{box-shadow:var(--in-sm)}
+  .newbtn .k{margin-left:auto;font-family:var(--mono);font-size:10px;
+    color:var(--fg-3);font-weight:500}
+
+  .nav{padding:4px 12px 12px;display:flex;flex-direction:column;gap:5px}
+  .nav button{display:flex;align-items:center;gap:11px;padding:9px 13px;
+    border-radius:var(--r);color:var(--fg-2);font-size:13px;
+    transition:box-shadow .18s,color .18s}
+  .nav button:hover{color:var(--fg);box-shadow:var(--up-sm)}
+  .nav button.on{color:var(--accent-2);font-weight:650;box-shadow:var(--in-sm)}
+  .nav .ic{width:15px;text-align:center;font-size:12px;opacity:.9}
+  .nav .badge{margin-left:auto;font-family:var(--mono);font-size:10px;
+    color:var(--fg-3);border-radius:var(--r-pill);padding:2px 8px;
+    background:var(--bg);box-shadow:var(--up-sm)}
+  .nav button.on .badge{color:var(--accent-2)}
+  .nav .badge.due{color:var(--warn)}
+
+  .tree{flex:1;overflow-y:auto;padding:4px 12px 22px}
+  .tlabel{font-size:9.5px;text-transform:uppercase;letter-spacing:1.2px;
+    color:var(--fg-3);padding:14px 4px 7px;font-weight:700}
+  .row{display:flex;align-items:center;gap:7px;padding:7px 12px;
+    border-radius:var(--r);cursor:pointer;user-select:none;
+    transition:box-shadow .16s,color .16s}
+  .row:hover{box-shadow:var(--up-sm)}
+  .row.on{color:var(--accent-2);box-shadow:var(--in-sm);font-weight:600}
+  .row .tw{width:11px;flex:none;color:var(--fg-3);font-size:8px;transition:transform .18s}
+  .row.open .tw{transform:rotate(90deg)}
+  .row .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .row .ct{font-family:var(--mono);font-size:10px;color:var(--fg-3)}
+  .row.prov .nm{color:var(--fg-3);font-style:italic}
+  .kids{margin-left:12px;padding-left:6px}
+  .views{margin-left:26px;padding-bottom:4px}
+  .vrow{display:flex;align-items:center;gap:8px;padding:5px 11px;
+    border-radius:var(--r);font-size:11.5px;color:var(--fg-3);cursor:pointer;
+    transition:box-shadow .16s,color .16s}
+  .vrow:hover{color:var(--fg-2);box-shadow:var(--up-sm)}
+  .vrow.on{color:var(--accent-2);box-shadow:var(--in-sm)}
+  .vrow .ct{margin-left:auto;font-family:var(--mono);font-size:10px}
+
+  /* ============ list ============ */
+  .list{width:348px;flex:none;display:flex;flex-direction:column;overflow:hidden;
+    background:var(--bg);border-radius:var(--r-lg);box-shadow:var(--up)}
+  .lhead{padding:16px 18px 12px;display:flex;align-items:center;gap:9px;min-height:50px}
+  .lhead h2{font-size:13px;font-weight:700;letter-spacing:.2px;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .lhead .ct{font-family:var(--mono);font-size:10.5px;color:var(--fg-3);margin-left:auto;
+    background:var(--bg);box-shadow:var(--up-sm);border-radius:var(--r-pill);padding:3px 9px}
+  .lhead .ct:empty{display:none}
+  .items{flex:1;overflow-y:auto;padding:2px 12px 14px}
+  /* Rows stay flat; only the selected one is pressed in, so "where am I"
+     is unmistakable without embossing every line of a long list. */
+  .item{padding:12px 14px;cursor:pointer;border-radius:var(--r);margin-bottom:4px;
+    transition:box-shadow .16s}
+  .item:hover{box-shadow:var(--up-sm)}
+  .item.on{box-shadow:var(--in-sm)}
+  .item.done .ti{text-decoration:line-through;color:var(--fg-3)}
+  .item .top{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+  .item .ti{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;flex:1}
+  .item .sn{font-size:11.5px;color:var(--fg-3);line-height:1.55;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .item .mt{display:flex;align-items:center;gap:9px;margin-top:7px;font-size:10px;
+    font-family:var(--mono);color:var(--fg-3)}
+  .item .mt .w{color:var(--accent-2)}
+  .item .mt .due{color:var(--warn)}
+  .item .mt .due.over{color:var(--danger)}
+  .item img{border:none!important;border-radius:10px!important;box-shadow:var(--up-sm)}
+  .box{width:17px;height:17px;border-radius:7px;flex:none;display:grid;
+    place-items:center;font-size:9px;color:transparent;background:var(--bg);
+    box-shadow:var(--up-sm);transition:box-shadow .16s,color .16s}
+  .box:hover{box-shadow:var(--in-sm)}
+  .box.on{color:var(--ok);box-shadow:var(--in-sm)}
+  .flag{width:7px;height:7px;border-radius:50%;background:var(--warn);flex:none}
+
+  /* ============ note ============ */
+  .pane{flex:1;overflow-y:auto;min-width:0;position:relative;
+    background:var(--bg);border-radius:var(--r-lg);box-shadow:var(--up)}
+  .note{max-width:760px;margin:0 auto;padding:40px 46px 120px}
+  .note img{border:none!important;border-radius:var(--r)!important;box-shadow:var(--up)}
+  .ntitle{font-size:23px;font-weight:700;line-height:1.3;margin:0 0 14px -10px;
+    outline:none;border-radius:var(--r);padding:6px 10px;transition:box-shadow .18s}
+  .ntitle:focus{box-shadow:var(--in-sm)}
+  .ntitle:focus-visible{outline:none}
+  .ntitle[data-fresh]{color:var(--fg-3)}
+  .nmeta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:26px}
+  .tag{font-size:11px;font-family:var(--mono);color:var(--fg-2);text-decoration:none;
+    background:var(--bg);box-shadow:var(--up-sm);border-radius:var(--r-pill);
+    padding:5px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+    transition:box-shadow .16s,color .16s}
+  .tag:hover{box-shadow:var(--in-sm)}
+  .tag.acc{color:var(--accent-2)}
+  .tag.due{color:var(--warn)}
+  .tag.over{color:var(--danger)}
+  .tag.danger{color:var(--fg-3);margin-left:auto}
+  .tag.danger:hover{color:var(--danger)}
+  .tag.unfiled{color:var(--warn);box-shadow:var(--in-sm)}
+  .tag.btn:hover{color:var(--accent-2)}
+  #body{font-size:15px;line-height:1.8;color:var(--fg);white-space:pre-wrap;
+    word-wrap:break-word;outline:none;min-height:200px;border-radius:var(--r);
+    padding:14px 16px;margin-left:-16px;transition:box-shadow .18s}
+  #body:focus{box-shadow:var(--in)}
+  #body:focus-visible{outline:none}
+  #body b,#body strong{font-weight:700}
+  #body code{font-family:var(--mono);font-size:13px;background:var(--bg);
+    padding:2px 7px;border-radius:7px;box-shadow:var(--in-sm)}
+  #body h1,#body h2,#body h3{font-weight:700;margin:.8em 0 .3em;line-height:1.3}
+  #body h1{font-size:19px} #body h2{font-size:17px} #body h3{font-size:15px}
+  #body ul{margin:.5em 0 .7em 1.2em;padding:0}
+  #body li{margin:.2em 0;line-height:1.7}
+  #body i{color:var(--fg-2)}
+  #body .ocr-head{font-size:9.5px;text-transform:uppercase;letter-spacing:1.2px;
+    font-weight:700;color:var(--fg-3);margin:1.6em 0 .7em}
+  .saved{position:absolute;top:18px;right:22px;font-size:10.5px;color:var(--fg-3);
+    font-family:var(--mono);opacity:0;transition:opacity .25s;background:var(--bg);
+    box-shadow:var(--up-sm);border-radius:var(--r-pill);padding:4px 11px;z-index:2}
+  .saved.show{opacity:1}
+
+  .sect{margin-top:36px;padding-top:4px}
+  .sect h3{font-size:9.5px;text-transform:uppercase;letter-spacing:1.2px;
+    color:var(--fg-3);margin-bottom:12px;font-weight:700}
+  .sect input{box-shadow:var(--in-sm);border-radius:var(--r)!important;
+    padding:11px 15px!important;border:none!important}
+  .sect input:focus{box-shadow:var(--in-sm), var(--ring)}
+  .sect input:focus-visible{outline:none}
+  .sect button{box-shadow:var(--up-sm);border-radius:var(--r)!important;
+    border:none!important;padding:11px 20px!important;transition:box-shadow .16s}
+  .sect button:hover{box-shadow:var(--up)}
+  .sect button:active{box-shadow:var(--in-sm)}
+  .rel{display:block;width:100%;text-align:left;padding:13px 16px;
+    border-radius:var(--r);margin-bottom:8px;background:var(--bg);
+    box-shadow:var(--up-sm);transition:box-shadow .16s}
+  .rel:hover{box-shadow:var(--up)}
+  .rel:active{box-shadow:var(--in-sm)}
+  .rel .t{font-size:13px;margin-bottom:3px}
+  .rel .w{font-family:var(--mono);font-size:10px;color:var(--fg-3)}
+
+  /* ============ today / triage / garden ============ */
+  .day{padding:34px 40px 90px;max-width:820px;margin:0 auto}
+  .day h1{font-size:23px;font-weight:700;margin-bottom:5px}
+  .day .sub{color:var(--fg-3);font-size:12.5px;margin-bottom:30px;line-height:1.6}
+  .grp{margin-bottom:28px}
+  .grp h4{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;font-weight:700;
+    color:var(--fg-3);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .grp h4.over{color:var(--danger)}
+  .task{display:flex;align-items:flex-start;gap:13px;padding:14px 17px;
+    border-radius:var(--r);margin-bottom:10px;cursor:pointer;background:var(--bg);
+    box-shadow:var(--up-sm);transition:box-shadow .16s}
+  .task:hover{box-shadow:var(--up)}
+  .task.done{opacity:.55;box-shadow:var(--in-sm)}
+  .task.done .tt{text-decoration:line-through}
+  .task .box{margin-top:1px}
+  .task .tt{font-size:13.5px;flex:1}
+  .task .when{font-family:var(--mono);font-size:10.5px;color:var(--warn);flex:none}
+  .task .when.over{color:var(--danger)}
+  .task .where{font-family:var(--mono);font-size:10px;color:var(--fg-3);margin-top:3px}
+
+  .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
+    height:100%;color:var(--fg-3);gap:16px;padding:40px;text-align:center}
+  .empty .g{font-size:30px;width:76px;height:76px;border-radius:50%;
+    background:var(--bg);box-shadow:var(--up);display:grid;place-items:center;
+    color:var(--fg-3)}
+  .empty p{font-size:12.5px;max-width:330px;line-height:1.65}
+  kbd{font-family:var(--mono);font-size:11px;background:var(--bg);
+    box-shadow:var(--up-sm);border-radius:7px;padding:3px 8px}
+  .prop{border-radius:var(--r);padding:16px 18px;margin-bottom:12px;display:flex;
+    gap:13px;align-items:flex-start;background:var(--bg);box-shadow:var(--up-sm)}
+  .ptag{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.6px;
+    padding:4px 9px;border-radius:var(--r-pill);flex:none;margin-top:1px;
+    background:var(--bg);box-shadow:var(--in-sm)}
+  .ptag.merge{color:var(--warn)}
+  .ptag.split{color:var(--accent-2)}
+  .ptag.reparent{color:var(--ok)}
+  .ptag.dissolve{color:var(--danger)}
+  .prop .txt{flex:1;font-size:13px;line-height:1.6;color:var(--fg-2)}
+  .sugg{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .sugg button{font-size:11.5px;border-radius:var(--r-pill);padding:7px 13px;
+    color:var(--fg-2);display:flex;gap:8px;background:var(--bg);
+    box-shadow:var(--up-sm);transition:box-shadow .16s,color .16s}
+  .sugg button:hover{color:var(--accent-2);box-shadow:var(--in-sm)}
+  .sugg .none{font-size:12px;color:var(--fg-3);padding:6px 0}
+  #graph{width:100%;height:100%;display:block;cursor:grab;border-radius:var(--r-lg)}
+  #graph:active{cursor:grabbing}
+
+  /* ============ toasts + status ============ */
+  .toasts{position:fixed;bottom:46px;left:50%;transform:translateX(-50%);
+    display:flex;flex-direction:column;gap:10px;z-index:60;align-items:center}
+  .toast{background:var(--bg);border-radius:var(--r-lg);box-shadow:var(--up-lg);
+    padding:14px 18px;display:flex;align-items:center;gap:13px;font-size:13px;
+    max-width:620px;animation:rise .24s cubic-bezier(.2,.9,.3,1)}
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1}}
+  .toast .w{color:var(--accent-2);font-weight:650}
+  .toast .s{color:var(--fg-3);font-size:11.5px}
+  .toast button{font-size:11.5px;color:var(--fg-2);border-radius:var(--r-pill);
+    padding:6px 13px;flex:none;background:var(--bg);box-shadow:var(--up-sm);
+    transition:box-shadow .16s,color .16s}
+  .toast button:hover{color:var(--accent-2);box-shadow:var(--in-sm)}
+  .toast.err{box-shadow:var(--up-lg), 0 0 0 2px var(--danger)}
+  .toast.remind{box-shadow:var(--up-lg), 0 0 0 2px var(--warn)}
+
+  .status{position:fixed;bottom:0;left:0;right:0;height:26px;background:var(--bg);
+    display:flex;align-items:center;gap:16px;padding:0 20px;
+    font-family:var(--mono);font-size:10px;color:var(--fg-3);z-index:20}
+  .status .sp{margin-left:auto}
+  .status b{color:var(--fg-2);font-weight:500}
+  #themeBtn{font-family:var(--mono);font-size:10px;color:var(--fg-2);
+    background:var(--bg);box-shadow:var(--up-sm);border-radius:var(--r-pill);
+    padding:3px 12px;transition:box-shadow .16s,color .16s}
+  #themeBtn:hover{color:var(--accent-2)}
+  #themeBtn:active{box-shadow:var(--in-sm)}
+  .spin{width:11px;height:11px;border:2px solid transparent;border-top-color:var(--accent);
+    border-radius:50%;animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important}
+  }
+</style>
+</head>
+<body>
+
+<div class="cap-wrap">
+  <div class="cap" id="capBox">
+    <div class="cap-row">
+      <span class="dot"></span>
+      <textarea id="cap" rows="1" spellcheck="false" autofocus
+        placeholder="Say anything — &quot;remind me friday at 5 to renew the domain&quot;"></textarea>
+    </div>
+    <div class="cap-foot">
+      <div class="chips" id="chips"></div>
+      <span class="sp"></span>
+      <span id="capHint"><span class="k">Enter</span> save · <span class="k">Shift ↵</span> newline · paste an image</span>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+  <aside class="side">
+    <div class="newwrap"><button class="newbtn" id="newBtn" title="New blank note (Alt+N)">
+      <span>＋</span><span>New note</span><span class="k">Alt N</span></button></div>
+    <nav class="nav">
+      <button data-v="today"><span class="ic">◉</span>Today<span class="badge due" id="bDue">0</span></button>
+      <button data-v="library" class="on"><span class="ic">▤</span>Notes<span class="badge" id="bNotes">0</span></button>
+      <button data-v="inbox"><span class="ic">⬒</span>Inbox<span class="badge" id="bInbox">0</span></button>
+      <button data-v="graph"><span class="ic">✳</span>Graph</button>
+      <button data-v="garden"><span class="ic">❋</span>Garden<span class="badge" id="bProp">·</span></button>
+    </nav>
+    <div class="tree" id="tree"></div>
+  </aside>
+
+  <section class="list" id="listPane">
+    <div class="lhead"><h2 id="lTitle">All notes</h2><span class="ct" id="lCount"></span></div>
+    <div class="items" id="items"></div>
+  </section>
+
+  <main class="pane" id="pane"><div class="saved" id="saved">saved</div></main>
+</div>
+
+<div class="status">
+  <span id="stStack">·</span><span id="stVault"></span>
+  <span class="sp"></span><span id="stMsg"></span><span id="stSpin"></span>
+  <button id="themeBtn" title="Switch light / dark">☀ light</button>
+</div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const el=(t,c,x)=>{const n=document.createElement(t);if(c)n.className=c;
+  if(x!=null)n.textContent=x;return n};
+const esc=s=>String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+
+const S={view:"library",topic:null,kind:null,sel:null,state:null,items:[],
+         q:null,open:new Set(),busy:0,note:null,reminded:new Set(),created:new Set(),dirty:false};
+
+/* ---------- transport ---------- */
+function busy(d){S.busy+=d;$("#stSpin").innerHTML=S.busy>0?'<div class="spin"></div>':""}
+async function api(p,o){busy(1);try{
+  const r=await fetch(p,Object.assign({headers:{"Content-Type":"application/json"}},o));
+  const j=await r.json(); if(j.error)throw new Error(j.error); return j;
+}finally{busy(-1)}}
+const post=(p,b)=>api(p,{method:"POST",body:JSON.stringify(b||{})});
+
+/* ---------- toasts ---------- */
+function toast(node,ms){$("#toasts").appendChild(node);
+  setTimeout(()=>{node.style.opacity="0";node.style.transition="opacity .25s";
+    setTimeout(()=>node.remove(),260)},ms||5200)}
+function errToast(m){const t=el("div","toast err");t.appendChild(el("span","","⚠"));
+  t.appendChild(el("span","",m));toast(t,8000)}
+
+/* ---------- time ---------- */
+function whenText(iso){
+  if(!iso)return"";
+  const d=new Date(iso.replace(" ","T")), now=new Date();
+  const days=Math.round((new Date(d.getFullYear(),d.getMonth(),d.getDate())
+    -new Date(now.getFullYear(),now.getMonth(),now.getDate()))/864e5);
+  const h=d.getHours()%12||12, m=String(d.getMinutes()).padStart(2,"0");
+  const clock=`${h}:${m} ${d.getHours()<12?"AM":"PM"}`;
+  if(days===0)return`Today ${clock}`;
+  if(days===1)return`Tomorrow ${clock}`;
+  if(days===-1)return`Yesterday ${clock}`;
+  if(days>1&&days<7)return`${d.toLocaleDateString(undefined,{weekday:"long"})} ${clock}`;
+  return`${d.toLocaleDateString(undefined,{day:"numeric",month:"short"})} ${clock}`;
+}
+const isOver=iso=>iso&&new Date(iso.replace(" ","T"))<new Date();
+
+/* ---------- capture ---------- */
+const capEl=$("#cap");
+function autoGrow(){
+  // scrollHeight counts the wrapped PLACEHOLDER too, so an empty box would
+  // open two lines tall. Collapse to one line whenever there is no value.
+  capEl.style.height="auto";
+  capEl.style.height=(capEl.value ? Math.min(190,capEl.scrollHeight) : 24)+"px";
+  document.documentElement.style.setProperty("--capH",
+    ($(".cap-wrap").offsetHeight)+"px")}
+capEl.addEventListener("input",()=>{autoGrow();preview()});
+capEl.addEventListener("focus",()=>$("#capBox").classList.add("focus"));
+capEl.addEventListener("blur",()=>$("#capBox").classList.remove("focus"));
+
+/* Live read-back of what the app thinks you said. Dictation is error-prone,
+   so the interpretation is visible BEFORE you commit, not only after. */
+const RX={
+  topic:/\b(?:put|file|save|stick|throw)\s+(?:this|it|that)\s+(?:in|into|under|to)\s+(?:my\s+)?([\w /-]{2,30}?)(?:\s+(?:notes?|folder|list))?\b/i,
+  topic2:/(?:^|\s)@(?:"([^"]+)"|([\w/-]+))/,
+  append:/\badd\s+(?:this\s+)?to\s+(?:the\s+|my\s+)?([\w /-]{2,30}?)\s+note\b/i,
+  remind:/\b(remind me|set a reminder|don'?t let me forget)\b/i,
+  task:/\b(i need to|i have to|i should|todo|make sure)\b/i,
+  time:/\b(today|tonight|tomorrow|next week|in \d+ (?:min|minute|hour|day|week)s?|(?:mon|tues|wednes|thurs|fri|satur|sun)day|at \d{1,2}(?::\d{2})?\s*(?:am|pm)?)\b/i,
+};
+function preview(){
+  const v=capEl.value, box=$("#chips"); box.innerHTML="";
+  if(!v.trim())return;
+  const add=(cls,txt)=>box.appendChild(el("span","chip "+cls,txt));
+  let m;
+  if((m=v.match(RX.append))) add("append","→ append to “"+m[1].trim()+"”");
+  else if((m=v.match(RX.topic2))) add("topic","→ "+(m[1]||m[2]));
+  else if((m=v.match(RX.topic))) add("topic","→ "+m[1].trim());
+  if(RX.remind.test(v)) add("time","reminder");
+  else if(RX.task.test(v)) add("","task");
+  if((m=v.match(RX.time))) add("time","⏰ "+m[1]);
+}
+
+capEl.addEventListener("keydown",async e=>{
+  if(e.key!=="Enter"||e.shiftKey)return;
+  e.preventDefault();
+  const text=capEl.value.trim(); if(!text)return;
+  capEl.value=""; autoGrow(); $("#chips").innerHTML="";
+  try{ captureToast(await post("/api/capture",{text})); await refresh(); }
+  catch(err){ errToast(String(err.message||err)); }
+});
+
+function captureToast(r){
+  const t=el("div","toast");
+  if(r.appendedTo){
+    t.appendChild(el("span","","＋"));
+    t.appendChild(el("span","w","appended"));
+    t.appendChild(el("span","s",r.title));
+    const o=el("button","","Open"); o.onclick=()=>{openNote(r.appendedTo);t.remove()};
+    t.appendChild(o); toast(t); return;
+  }
+  t.appendChild(el("span","","✓"));
+  t.appendChild(el("span","w",r.due?whenText(r.due):(r.topic||"Inbox")));
+  const bits=[];
+  if(r.due&&r.topic)bits.push(r.topic);
+  if(r.reminder)bits.push("reminder set");
+  if(r.recurrence)bits.push(r.recurrence);
+  if(r.related)bits.push(`linked to ${r.related}`);
+  if(r.outcome==="review")bits.push("needs review");
+  if(r.promoted&&r.promoted.length)bits.push(r.promoted.join(", ")+" earned a folder");
+  if(bits.length)t.appendChild(el("span","s",bits.join(" · ")));
+  const o=el("button","","Open"); o.onclick=()=>{openNote(r.id);t.remove()};
+  const u=el("button","","Undo");
+  u.onclick=async()=>{await post("/api/undo");t.remove();refresh()};
+  t.appendChild(o); t.appendChild(u); toast(t);
+}
+
+/* ---------- images: paste, drop ---------- */
+const box=$("#capBox");
+["dragenter","dragover"].forEach(ev=>box.addEventListener(ev,e=>{
+  e.preventDefault();box.classList.add("drag")}));
+["dragleave","drop"].forEach(ev=>box.addEventListener(ev,e=>{
+  e.preventDefault();box.classList.remove("drag")}));
+box.addEventListener("drop",e=>{
+  const f=[...e.dataTransfer.files].find(x=>x.type.startsWith("image/"));
+  if(f)uploadImage(f);
+  else if(e.dataTransfer.files.length)errToast("Only images can be dropped for now");
+});
+
+// A pasted screenshot arrives as a clipboard ITEM, not as a dropped file.
+addEventListener("paste",e=>{
+  const cd=e.clipboardData; if(!cd)return;
+  const item=[...cd.items].find(i=>i.type.startsWith("image/"));
+  if(!item)return;
+  const f=item.getAsFile(); if(!f)return;
+  e.preventDefault(); uploadImage(f);
+});
+
+function readAsBase64(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(String(r.result).split(",")[1]);
+    r.onerror=()=>rej(new Error("could not read the image"));
+    r.readAsDataURL(file);
+  });
+}
+
+async function uploadImage(file){
+  if(file.size>12e6){
+    errToast("Image is "+(file.size/1e6).toFixed(1)+" MB; limit is 12 MB");return}
+  // Two vision passes take several seconds, so the wait is shown rather than
+  // leaving the user unsure whether the paste registered at all.
+  const note=capEl.value.trim();
+  capEl.value=""; autoGrow(); $("#chips").innerHTML="";
+  const t=el("div","toast");
+  t.appendChild(el("div","spin"));
+  const m=el("div"); m.style.flex="1";
+  m.appendChild(el("div","w","Reading image\u2026"));
+  m.appendChild(el("div","s",(file.name||"screenshot")+" \u00b7 "+
+    (file.size/1024).toFixed(0)+" KB \u00b7 describing and transcribing"));
+  t.appendChild(m); toast(t,120000);
+  try{
+    const data=await readAsBase64(file);
+    const r=await post("/api/upload",{data,text:note});
+    t.remove(); imageToast(r); await refresh();
+  }catch(err){ t.remove(); errToast(String(err.message||err)); }
+}
+
+function imageToast(r){
+  const t=el("div","toast");
+  t.appendChild(el("span","","\u25a3"));
+  const m=el("div"); m.style.flex="1";
+  m.appendChild(el("div","w",r.topic||"Inbox"));
+  const words=r.ocr?r.ocr.split(/\s+/).filter(Boolean).length:0;
+  m.appendChild(el("div","s",[r.title,
+    words?words+" words of text read":"no text found"].join(" \u00b7 ")));
+  t.appendChild(m);
+  const o=el("button","","Open"); o.onclick=()=>{openNote(r.id);t.remove()};
+  t.appendChild(o); toast(t,9000);
+}
+
+/* ---------- sidebar ---------- */
+const VIEW_ICON={video:"▶",link:"⌘",article:"❑",task:"☐",image:"◨",pending:"◔"};
+function renderTree(){
+  const b=$("#tree"); b.innerHTML=""; const st=S.state; if(!st)return;
+  const all=el("div","row"+(!S.topic&&!S.kind&&S.view==="library"?" on":""));
+  all.appendChild(el("span","tw",""));
+  all.appendChild(el("span","nm","All notes"));
+  all.appendChild(el("span","ct",String(st.notes)));
+  all.onclick=()=>{S.topic=null;S.kind=null;S.q=null;go("library")};
+  b.appendChild(all);
+  if(st.tree.length)b.appendChild(el("div","tlabel","Topics"));
+
+  const walk=(nodes,depth)=>{
+    const w=el("div",depth?"kids":"");
+    nodes.forEach(n=>{
+      const h=el("div","node");
+      const r=el("div","row"+(S.topic===n.path&&!S.kind?" on":"")+
+        (n.state!=="active"?" prov":"")+(S.open.has(n.path)?" open":""));
+      const kids=n.children.length||Object.keys(n.views).length;
+      const tw=el("span","tw",kids?"▶":"");
+      tw.onclick=ev=>{ev.stopPropagation();
+        S.open.has(n.path)?S.open.delete(n.path):S.open.add(n.path);renderTree()};
+      r.appendChild(tw);
+      r.appendChild(el("span","nm",n.name));
+      r.appendChild(el("span","ct",String(n.count)));
+      r.title=n.state!=="active"
+        ? n.path+" — provisional: no folder on disk until it has enough notes"
+        : n.path;
+      r.onclick=()=>{S.topic=n.path;S.kind=null;S.q=null;S.open.add(n.path);go("library")};
+      h.appendChild(r);
+      if(S.open.has(n.path)){
+        const vs=Object.entries(n.views).filter(([,v])=>v>0);
+        if(vs.length){
+          const vb=el("div","views");
+          vs.forEach(([k,v])=>{
+            const vr=el("div","vrow"+(S.topic===n.path&&S.kind===k?" on":""));
+            vr.appendChild(el("span","",VIEW_ICON[k]||"•"));
+            vr.appendChild(el("span","",k==="pending"?"Pending":k[0].toUpperCase()+k.slice(1)+"s"));
+            vr.appendChild(el("span","ct",String(v)));
+            vr.title="A live view of "+n.path+" filtered by "+k+" — not a folder";
+            vr.onclick=ev=>{ev.stopPropagation();S.topic=n.path;S.kind=k;S.q=null;go("library")};
+            vb.appendChild(vr)});
+          h.appendChild(vb);
+        }
+        if(n.children.length)h.appendChild(walk(n.children,depth+1));
+      }
+      w.appendChild(h)});
+    return w;
+  };
+  b.appendChild(walk(st.tree,0));
+}
+
+/* ---------- list ---------- */
+const KIND={video:"vid",link:"link",article:"art",task:"task",image:"img",
+  idea:"idea",reference:"ref",snippet:"snip",note:""};
+function renderItems(){
+  const b=$("#items"); b.innerHTML="";
+  $("#lCount").textContent=S.items.length||"";
+  if(!S.items.length){
+    const e=el("div","empty");e.appendChild(el("div","g","◦"));
+    e.appendChild(el("p","",S.q?"Nothing matched.":"Nothing here yet."));
+    b.appendChild(e);return;
+  }
+  S.items.forEach(n=>{
+    const it=el("div","item"+(S.sel===n.id?" on":"")+(n.done?" done":""));
+    const top=el("div","top");
+    if(n.kind==="task"){
+      const cb=el("div","box"+(n.done?" on":""),"✓");
+      cb.onclick=async ev=>{ev.stopPropagation();
+        await post("/api/note/complete",{id:n.id,done:!n.done});refresh()};
+      top.appendChild(cb);
+    }
+    top.appendChild(el("span","ti",n.title));
+    if(n.review){const f=el("span","flag");f.title="filed, but flagged for review";
+      top.appendChild(f)}
+    it.appendChild(top);
+    const sn=(n.snippet||"").trim();
+    if(n.media){
+      const row=el("div"); row.style.display="flex"; row.style.gap="9px";
+      const th=el("img"); th.src="/media/"+n.media.split("/").pop(); th.loading="lazy";
+      Object.assign(th.style,{width:"44px",height:"44px",objectFit:"cover",
+        borderRadius:"6px",border:"1px solid var(--line)",flex:"none"});
+      row.appendChild(th);
+      if(sn)row.appendChild(el("div","sn",sn));
+      it.appendChild(row);
+    } else if(sn&&!sn.toLowerCase().startsWith(n.title.toLowerCase().slice(0,36)))
+      it.appendChild(el("div","sn",sn));
+    const mt=el("div","mt");
+    if(n.due){const d=el("span","due"+(isOver(n.due)&&!n.done?" over":""),
+      "⏰ "+whenText(n.due));mt.appendChild(d)}
+    if(KIND[n.kind])mt.appendChild(el("span","",KIND[n.kind]));
+    if(n.topic&&(!S.topic||S.q))mt.appendChild(el("span","w",n.topic));
+    if(mt.children.length)it.appendChild(mt);
+    it.onclick=()=>openNote(n.id);
+    b.appendChild(it)});
+}
+
+/* ---------- note view: click to edit ---------- */
+function mdToHtml(t){
+  const lines=esc(t).split("\n");
+  const out=[]; let inList=false;
+  const close=()=>{if(inList){out.push("</ul>");inList=false}};
+  for(let raw of lines){
+    // The transcript block gets its own styling: it is what the model read
+    // OFF the image, as opposed to what it inferred about it.
+    if(/^\*\*Text in image\*\*$/.test(raw.trim())){
+      close(); out.push('<div class="ocr-head">Text in image</div>'); continue;
+    }
+    let m;
+    if((m=raw.match(/^\s*[-*]\s+(.*)$/))){
+      if(!inList){out.push("<ul>");inList=true}
+      out.push("<li>"+inline(m[1])+"</li>"); continue;
+    }
+    close();
+    if((m=raw.match(/^(#{1,3})\s+(.*)$/))){
+      const n=m[1].length; out.push(`<h${n}>`+inline(m[2])+`</h${n}>`); continue;
+    }
+    if(/^\s*$/.test(raw)){out.push("");continue}
+    out.push(inline(raw));
+  }
+  close();
+  return out.join("\n");
+  function inline(x){
+    return x.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")
+            .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g,"$1<i>$2</i>")
+            .replace(/`([^`]+)`/g,"<code>$1</code>")
+            .replace(/\[(.+?)\]\((https?:[^)\s]+)\)/g,
+              '<a href="$2" target="_blank" rel="noreferrer noopener">$1</a>');
+  }
+}
+let saveTimer=null;
+// Saves are chained, never fired in parallel: leaving a note must see every
+// edit already on disk before it decides to file or discard that note.
+let saveQ=Promise.resolve();
+function queueSave(id,patch){
+  S.dirty=true;
+  saveQ=saveQ.then(()=>post("/api/note/update",Object.assign({id},patch)))
+    .then(r=>{flashSaved();return r})
+    .catch(e=>errToast("Could not save: "+(e.message||e)));
+  return saveQ;
+}
+// Refreshing the list re-renders it. Doing that on mousedown (which is when a
+// blur fires) destroys the element the user is about to click, so the list
+// refresh after a save is deferred past the click.
+let softTimer=null;
+function softRefresh(){clearTimeout(softTimer);softTimer=setTimeout(refresh,450)}
+
+function isBlank(n){
+  return (!n.title||n.title.trim()===""||n.title.trim()==="Untitled")
+      && !(n.body||"").trim();
+}
+
+/* Leaving a note: flush edits, then either throw away an untouched blank
+   note, or -- if it was written in this visit and has no folder -- file it. */
+async function leaveNote(id){
+  if(!S.note||S.note.id!==id)return;
+  const note=S.note;
+  const bodyEl=$("#body"), h=document.querySelector(".ntitle");
+  if(bodyEl&&document.activeElement===bodyEl){
+    const v=bodyEl.textContent;
+    if(v!==note.body){note.body=v;queueSave(id,{body:v})}
+  }
+  if(h&&document.activeElement===h){
+    const t=h.textContent.trim();
+    if(t&&t!==note.title){note.title=t;queueSave(id,{title:t})}
+  }
+  clearTimeout(saveTimer);saveTimer=null;
+  await saveQ;
+  const touched=S.dirty||S.created.has(id);
+  S.dirty=false;
+  if(S.created.has(id)&&isBlank(note)){
+    S.created.delete(id);
+    await post("/api/note/delete",{id}).catch(()=>{});
+    softRefresh();return;
+  }
+  S.created.delete(id);
+  if(!note.topic&&touched){
+    try{fileToast(await post("/api/note/file",{id}),id)}catch(e){}
+  }
+}
+
+function fileToast(r,id){
+  const t=el("div","toast");
+  if(r.filed){
+    t.appendChild(el("span","","✓"));
+    t.appendChild(el("span","w",r.topic));
+    t.appendChild(el("span","s","filed"+(r.outcome==="review"?" · needs review":"")));
+    const o=el("button","","Open");o.onclick=()=>{t.remove();openNote(id)};
+    const u=el("button","","Undo");
+    u.onclick=async()=>{await post("/api/undo");t.remove();refresh()};
+    t.appendChild(o);t.appendChild(u);
+  }else if(r.reason==="not confident"){
+    t.appendChild(el("span","","⬒"));
+    t.appendChild(el("span","s","Not sure where that note belongs — left in Inbox"));
+  }else return;
+  toast(t,7000);softRefresh();
+}
+
+async function newNote(){
+  const topic=(S.view==="library"&&!S.q)?S.topic:null;
+  if(S.sel){await leaveNote(S.sel);S.sel=null}
+  let r;
+  try{r=await post("/api/note/new",{topic})}
+  catch(e){errToast("Could not create a note: "+(e.message||e));return}
+  S.created.add(r.id);
+  S.kind=null;S.q=null;
+  if(S.view!=="library"){if(!topic)S.topic=null;await go("library")}
+  else await refresh();
+  await openNote(r.id,{fresh:true});
+}
+function flashSaved(){const s=$("#saved");s.classList.add("show");
+  clearTimeout(s._t);s._t=setTimeout(()=>s.classList.remove("show"),1400)}
+
+async function openNote(id,opts){
+  if(S.sel&&S.sel!==id)await leaveNote(S.sel);
+  S.sel=id; renderItems();
+  const n=await api("/api/note?id="+encodeURIComponent(id));
+  S.note=n; S.dirty=false;
+  const p=$("#pane"); p.innerHTML='<div class="saved" id="saved">saved</div>';
+  const w=el("div","note"); p.appendChild(w); p.scrollTop=0;
+
+  const h=el("h1","ntitle",n.title);
+  h.contentEditable="plaintext-only"; h.spellcheck=false;
+  // A title is one line. Enter can arrive as a keydown (keyboard), or only as
+  // an input event (dictation tools, IMEs, some automation), so both are
+  // handled -- and anything that still slips a line break in has everything
+  // after it moved down into the body instead of being glued onto the title.
+  const toBody=(extra)=>{
+    const b=$("#body"); if(!b)return;
+    b.focus();
+    if(extra){b.textContent=(extra+(b.textContent?"\n"+b.textContent:""));}
+    const r=document.createRange();r.selectNodeContents(b);r.collapse(false);
+    const sel=getSelection();sel.removeAllRanges();sel.addRange(r);
+  };
+  h.addEventListener("keydown",e=>{
+    if(e.key==="Enter"||e.keyCode===13){e.preventDefault();toBody()}});
+  h.addEventListener("beforeinput",e=>{
+    if(e.inputType==="insertParagraph"||e.inputType==="insertLineBreak"){
+      e.preventDefault();toBody()}});
+  h.addEventListener("input",()=>{
+    h.removeAttribute("data-fresh");
+    const t=h.textContent;
+    const i=t.search(/[\r\n]/);
+    if(i>=0){h.textContent=t.slice(0,i);toBody(t.slice(i+1).replace(/^[\r\n]+/,""))}
+  });
+  h.addEventListener("blur",()=>{
+    const t=h.textContent.trim();
+    if(!t){h.textContent=S.note.title;return}
+    if(t!==S.note.title){S.note.title=t;queueSave(id,{title:t}).then(softRefresh)}});
+  w.appendChild(h);
+
+  const meta=el("div","nmeta");
+  if(n.topic)meta.appendChild(el("span","tag acc",n.topic));
+  if(n.due){
+    const d=el("span","tag due"+(isOver(n.due)&&!n.done?" over":""),
+      "⏰ "+whenText(n.due));
+    d.title="Click to clear the reminder";
+    d.onclick=async()=>{await post("/api/note/schedule",{id,when:null});openNote(id);refresh()};
+    meta.appendChild(d);
+  }
+  if(n.kind==="task"){
+    const t=el("span","tag"+(n.done?" acc":""),n.done?"✓ done":"mark done");
+    t.onclick=async()=>{await post("/api/note/complete",{id,done:!n.done});
+      openNote(id);refresh()};
+    meta.appendChild(t);
+  }
+  meta.appendChild(el("span","tag",n.kind));
+  if(n.review)meta.appendChild(el("span","tag","needs review"));
+  if(!n.topic){
+    const u=el("span","tag unfiled","unfiled");
+    u.title="Filed automatically when you leave this note, if there is enough to go on";
+    meta.appendChild(u);
+    const f=el("span","tag btn","File now");
+    f.title="Let it pick a folder based on what you wrote";
+    f.onclick=async()=>{
+      const b=$("#body");
+      if(b&&b.textContent!==S.note.body){S.note.body=b.textContent;
+        queueSave(id,{body:b.textContent})}
+      clearTimeout(saveTimer);await saveQ;
+      const r=await post("/api/note/file",{id});
+      if(!r.filed&&r.reason==="too short to file"){
+        errToast("Write a little more first — there is nothing to file it by yet");return}
+      fileToast(r,id);S.dirty=false;S.created.delete(id);
+      await refresh();openNote(id);
+    };
+    meta.appendChild(f);
+  }
+  const del=el("span","tag danger","Delete");
+  del.onclick=async()=>{
+    clearTimeout(saveTimer);await saveQ;
+    await post("/api/note/delete",{id});
+    S.created.delete(id);S.sel=null;S.note=null;S.dirty=false;
+    const t=el("div","toast");t.appendChild(el("span","","✕"));
+    t.appendChild(el("span","s","Deleted “"+(n.title||"Untitled")+"”"));
+    const u=el("button","","Undo");
+    u.onclick=async()=>{await post("/api/undo");t.remove();await refresh();openNote(id)};
+    t.appendChild(u);toast(t,8000);
+    await refresh();emptyPane("Note deleted.");
+  };
+  meta.appendChild(del);
+  w.appendChild(meta);
+
+  if(n.media){
+    const img=el("img"); img.src="/media/"+n.media.split("/").pop();
+    img.alt=n.title; img.loading="lazy";
+    Object.assign(img.style,{maxWidth:"100%",borderRadius:"10px",
+      border:"1px solid var(--line)",marginBottom:"18px",display:"block"});
+    w.appendChild(img);
+  }
+  if(n.source){const a=el("a","tag",n.source.slice(0,64));a.href=n.source;
+    a.target="_blank";a.rel="noreferrer noopener";a.style.marginBottom="14px";
+    a.style.display="inline-block";w.appendChild(a)}
+
+  // Click-to-edit: rendered markdown until focused, raw text while editing.
+  const body=el("div"); body.id="body"; body.contentEditable="plaintext-only";
+  body.spellcheck=false; body.textContent=n.body||"";
+  body.innerHTML=mdToHtml(n.body||"")||"<span style='color:var(--fg-3)'>Empty — click to write</span>";
+  body.addEventListener("focus",()=>{body.textContent=S.note.body||""});
+  body.addEventListener("blur",()=>{
+    const v=body.textContent;
+    body.innerHTML=mdToHtml(v)||"<span style='color:var(--fg-3)'>Empty — click to write</span>";
+    if(v!==S.note.body){S.note.body=v;clearTimeout(saveTimer);
+      queueSave(id,{body:v}).then(softRefresh)}});
+  body.addEventListener("input",()=>{clearTimeout(saveTimer);
+    saveTimer=setTimeout(()=>{const v=body.textContent;
+      if(v!==S.note.body){S.note.body=v;queueSave(id,{body:v})}},1200)});
+  w.appendChild(body);
+  if(opts&&opts.fresh){
+    // A new note opens with its title selected, so typing replaces "Untitled"
+    // and Enter drops straight into the body -- same as any notes app.
+    h.setAttribute("data-fresh","");
+    requestAnimationFrame(()=>{h.focus();const r=document.createRange();
+      r.selectNodeContents(h);const sel=getSelection();
+      sel.removeAllRanges();sel.addRange(r)});
+  }
+
+  const act=el("div","sect");
+  act.appendChild(el("h3","","Move"));
+  const row=el("div");row.style.display="flex";row.style.gap="8px";
+  const inp=el("input");inp.placeholder="Technology/AI";inp.value=n.topic||"";
+  Object.assign(inp.style,{flex:"1",border:"1px solid var(--line-2)",
+    borderRadius:"8px",padding:"8px 11px",background:"var(--raised)"});
+  const go2=async()=>{const t=inp.value.trim();if(!t)return;
+    await post("/api/move",{id,topic:t});
+    const tt=el("div","toast");tt.appendChild(el("span","","→"));
+    tt.appendChild(el("span","w",t));
+    tt.appendChild(el("span","s","moved — the router learns from this"));
+    toast(tt);await refresh();openNote(id)};
+  inp.addEventListener("keydown",e=>{if(e.key==="Enter")go2()});
+  const bt=el("button","","Move");
+  Object.assign(bt.style,{border:"1px solid var(--line-2)",borderRadius:"8px",
+    padding:"8px 14px",color:"var(--fg-2)"});
+  bt.onclick=go2; row.appendChild(inp);row.appendChild(bt);act.appendChild(row);
+  w.appendChild(act);
+
+  if(n.related&&n.related.length){
+    const s=el("div","sect");s.appendChild(el("h3","","Connects to "+n.related.length));
+    n.related.forEach(r=>{const b=el("button","rel");
+      b.appendChild(el("div","t",r.title));
+      b.appendChild(el("div","w",r.topic||"Inbox"));
+      b.onclick=()=>openNote(r.id);s.appendChild(b)});
+    w.appendChild(s);
+  }
+}
+function emptyPane(msg,kbd){
+  const p=$("#pane");p.innerHTML='<div class="saved" id="saved">saved</div>';
+  const e=el("div","empty");e.appendChild(el("div","g","✳"));
+  const t=el("p","",msg);
+  if(kbd){t.appendChild(document.createTextNode(" "));
+    const k=el("kbd","",kbd);t.appendChild(k)}
+  e.appendChild(t);p.appendChild(e);
+}
+
+/* ---------- today ---------- */
+async function loadToday(){
+  const r=await api("/api/agenda");
+  const p=$("#pane");p.innerHTML="";
+  const d=el("div","day");p.appendChild(d);
+  d.appendChild(el("h1","","Today"));
+  d.appendChild(el("div","sub",new Date().toLocaleDateString(undefined,
+    {weekday:"long",day:"numeric",month:"long"})));
+  if(!r.notes.length){
+    d.appendChild(el("p","",""));
+    const e=el("div","empty");e.appendChild(el("div","g","◉"));
+    e.appendChild(el("p","","Nothing scheduled. Try “remind me tomorrow at 9 to call the bank”."));
+    d.appendChild(e);return;
+  }
+  const now=new Date(), grp={over:[],today:[],soon:[],later:[],done:[]};
+  r.notes.forEach(n=>{
+    if(n.done){grp.done.push(n);return}
+    const t=new Date(n.due.replace(" ","T"));
+    const days=Math.round((new Date(t.getFullYear(),t.getMonth(),t.getDate())
+      -new Date(now.getFullYear(),now.getMonth(),now.getDate()))/864e5);
+    if(t<now)grp.over.push(n); else if(days===0)grp.today.push(n);
+    else if(days<7)grp.soon.push(n); else grp.later.push(n);
+  });
+  const section=(key,label,over)=>{
+    if(!grp[key].length)return;
+    const g=el("div","grp");
+    const h=el("h4",over?"over":"",label);
+    h.appendChild(el("span","",`(${grp[key].length})`));
+    g.appendChild(h);
+    grp[key].forEach(n=>{
+      const t=el("div","task"+(n.done?" done":""));
+      const cb=el("div","box"+(n.done?" on":""),"✓");
+      cb.onclick=async ev=>{ev.stopPropagation();
+        await post("/api/note/complete",{id:n.id,done:!n.done});loadToday();refresh()};
+      t.appendChild(cb);
+      const mid=el("div");mid.style.flex="1";
+      mid.appendChild(el("div","tt",n.title));
+      if(n.topic)mid.appendChild(el("div","where",n.topic));
+      t.appendChild(mid);
+      t.appendChild(el("span","when"+(isOver(n.due)&&!n.done?" over":""),whenText(n.due)));
+      t.onclick=()=>{go("library");openNote(n.id)};
+      g.appendChild(t)});
+    d.appendChild(g);
+  };
+  section("over","Overdue",true); section("today","Today");
+  section("soon","This week"); section("later","Later"); section("done","Done");
+}
+
+/* ---------- other views ---------- */
+async function loadLibrary(){
+  if(S.q){
+    const r=await api("/api/search?q="+encodeURIComponent(S.q));
+    S.items=r.hits.map(h=>({id:h.id,title:h.title,kind:"note",topic:h.topic,
+      snippet:h.snippet}));
+    $("#lTitle").textContent="Search: "+S.q; renderItems();
+    if(!S.sel)emptyPane("Select a result."); return;
+  }
+  let url="/api/notes", title="All notes";
+  const p=new URLSearchParams();
+  if(S.topic)p.set("topic",S.topic);
+  if(S.kind==="pending"){p.set("kind","task");p.set("status","open")}
+  else if(S.kind)p.set("kind",S.kind);
+  if([...p].length)url+="?"+p.toString();
+  if(S.topic)title=S.topic+(S.kind?" · "+S.kind:"");
+  const r=await api(url); S.items=r.notes;
+  $("#lTitle").textContent=title; renderItems();
+  // An open note stays open. Previously every save refreshed the list and
+  // this line then replaced the note being written with "Select a note."
+  if(S.sel)return;
+  if(!S.items.length&&!S.state.notes)
+    emptyPane("Nothing written yet. Click New note, or type in the box above and press","Enter");
+  else emptyPane("Select a note, or start a new one.","Alt N");
+}
+async function loadInbox(){
+  const r=await api("/api/inbox");
+  S.items=r.notes.concat(r.review);
+  $("#lTitle").textContent="Inbox"; renderItems();
+  if(!S.items.length){emptyPane("Inbox is clear.");return}
+  const p=$("#pane");p.innerHTML="";
+  const d=el("div","day");p.appendChild(d);
+  d.appendChild(el("h1","","Triage"));
+  d.appendChild(el("div","sub",
+    "Notes it would not guess at, plus anything it flagged. Unfiled is an honest answer — pick a home and it learns."));
+  for(const n of S.items.slice(0,25)){
+    const c=el("div","prop");c.style.display="block";
+    const hd=el("div");hd.style.display="flex";hd.style.gap="8px";
+    hd.style.alignItems="center";hd.style.marginBottom="4px";
+    const t=el("span","",n.title);t.style.fontWeight="600";t.style.fontSize="13px";
+    hd.appendChild(t);
+    if(n.topic){const cc=el("span","tag acc",n.topic);cc.style.marginLeft="auto";
+      hd.appendChild(cc)}
+    c.appendChild(hd);
+    const sb=el("div","sugg");c.appendChild(sb);d.appendChild(c);
+    api("/api/suggest?id="+encodeURIComponent(n.id)).then(res=>{
+      if(!res.suggestions.length){
+        sb.appendChild(el("span","",""));return}
+      res.suggestions.forEach(s=>{
+        const b=el("button");b.appendChild(el("span","",s.path));
+        b.appendChild(el("span","",s.similarity.toFixed(2)));
+        b.onclick=async()=>{await post("/api/move",{id:n.id,topic:s.path});
+          c.style.opacity=".35";sb.innerHTML="";
+          sb.appendChild(el("span","","→ "+s.path));await refresh()};
+        sb.appendChild(b)})}).catch(()=>{});
+  }
+}
+async function loadGarden(){
+  const p=$("#pane");p.innerHTML="";
+  const d=el("div","day");p.appendChild(d);
+  d.appendChild(el("h1","","Garden"));
+  d.appendChild(el("div","sub",
+    "Structure it could not see at capture time. Proposals only — nothing here has been applied."));
+  const r=await api("/api/garden");
+  $("#bProp").textContent=r.proposals.length||"·";
+  if(!r.proposals.length){d.appendChild(el("span","tag","nothing to tidy"));return}
+  r.proposals.forEach(x=>{const b=el("div","prop");
+    b.appendChild(el("span","ptag "+x.kind,x.kind));
+    b.appendChild(el("div","",x.summary));d.appendChild(b)});
+}
+
+/* ---------- graph ---------- */
+let stopGraph=null;
+async function loadGraph(){
+  if(stopGraph){stopGraph();stopGraph=null}
+  const p=$("#pane");p.innerHTML="";
+  const cv=el("canvas");cv.id="graph";p.appendChild(cv);
+  stopGraph=runGraph(cv,await api("/api/graph"));
+}
+function runGraph(cv,data){
+  const ctx=cv.getContext("2d");
+  const nodes=data.nodes.map(n=>Object.assign({},n,
+    {x:(Math.random()-.5)*500,y:(Math.random()-.5)*500,vx:0,vy:0}));
+  const ix=new Map(nodes.map((n,i)=>[n.id,i]));
+  const links=data.links.filter(l=>ix.has(l.source)&&ix.has(l.target))
+    .map(l=>({s:ix.get(l.source),t:ix.get(l.target),type:l.type}));
+  let cam={x:0,y:0,z:1},drag=null,raf=0,alive=true,ticks=0,fitted=false;
+  const cs=getComputedStyle(document.documentElement);
+  const C={topic:cs.getPropertyValue("--accent-2").trim(),
+    note:cs.getPropertyValue("--fg-3").trim(),line:cs.getPropertyValue("--line").trim(),
+    rel:cs.getPropertyValue("--accent").trim(),fg:cs.getPropertyValue("--fg-2").trim()};
+  const size=()=>{const r=cv.getBoundingClientRect();
+    cv.width=r.width*devicePixelRatio;cv.height=r.height*devicePixelRatio};
+  size(); const ro=new ResizeObserver(size); ro.observe(cv);
+  function step(){
+    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+      const a=nodes[i],b=nodes[j];let dx=b.x-a.x,dy=b.y-a.y,d2=dx*dx+dy*dy;
+      if(d2<1)d2=1; if(d2>40000)continue;
+      const f=170/d2,d=Math.sqrt(d2),ux=dx/d*f,uy=dy/d*f;
+      a.vx-=ux;a.vy-=uy;b.vx+=ux;b.vy+=uy}
+    links.forEach(l=>{const a=nodes[l.s],b=nodes[l.t];
+      const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1;
+      const rest=l.type==="about"?26:l.type==="parent"?86:60;
+      const f=(d-rest)*(l.type==="related"?.0012:l.type==="about"?.022:.01);
+      const ux=dx/d*f,uy=dy/d*f;a.vx+=ux;a.vy+=uy;b.vx-=ux;b.vy-=uy});
+    nodes.forEach(n=>{n.vx-=n.x*.0026;n.vy-=n.y*.0026;
+      n.vx*=.82;n.vy*=.82;n.x+=n.vx;n.y+=n.vy})}
+  function fit(){if(!nodes.length)return;
+    const xs=nodes.map(n=>n.x),ys=nodes.map(n=>n.y);
+    const a=Math.min(...xs),b=Math.max(...xs),c=Math.min(...ys),e=Math.max(...ys);
+    const w=cv.width/devicePixelRatio,h=cv.height/devicePixelRatio,pad=70;
+    cam.z=Math.max(.2,Math.min(1.6,Math.min((w-pad*2)/Math.max(1,b-a),
+      (h-pad*2)/Math.max(1,e-c))));
+    cam.x=-((a+b)/2)*cam.z;cam.y=-((c+e)/2)*cam.z}
+  function draw(){const w=cv.width,h=cv.height,dpr=devicePixelRatio;
+    ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,w,h);
+    ctx.setTransform(cam.z*dpr,0,0,cam.z*dpr,w/2+cam.x*dpr,h/2+cam.y*dpr);
+    links.forEach(l=>{const a=nodes[l.s],b=nodes[l.t];
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+      ctx.strokeStyle=l.type==="related"?C.rel:C.line;
+      ctx.globalAlpha=l.type==="related"?.22:.5;
+      ctx.lineWidth=l.type==="parent"?1.4:.8;ctx.stroke()});
+    ctx.globalAlpha=1;
+    nodes.forEach(n=>{const r=n.type==="topic"?n.size/1.7:2.4;
+      ctx.beginPath();ctx.arc(n.x,n.y,r,0,6.284);
+      ctx.fillStyle=n.type==="topic"?C.topic:C.note;
+      ctx.globalAlpha=n.type==="topic"?1:.55;ctx.fill()});
+    ctx.globalAlpha=1;
+    if(cam.z>.55){ctx.font="600 10px "+cs.getPropertyValue("--sans");
+      ctx.fillStyle=C.fg;ctx.textAlign="center";
+      nodes.filter(n=>n.type==="topic").forEach(n=>
+        ctx.fillText(n.label,n.x,n.y-n.size/1.7-5))}}
+  (function loop(){if(!alive)return;
+    if(ticks++<600)step(); if(!fitted&&ticks>220){fit();fitted=true}
+    draw();raf=requestAnimationFrame(loop)})();
+  cv.addEventListener("mousedown",e=>drag={x:e.clientX,y:e.clientY,cx:cam.x,cy:cam.y});
+  addEventListener("mouseup",()=>drag=null);
+  addEventListener("mousemove",e=>{if(!drag)return;
+    cam.x=drag.cx+(e.clientX-drag.x);cam.y=drag.cy+(e.clientY-drag.y);
+    ticks=Math.min(ticks,590)});
+  cv.addEventListener("wheel",e=>{e.preventDefault();
+    cam.z=Math.max(.15,Math.min(3,cam.z*(e.deltaY<0?1.12:.89)))},{passive:false});
+  return()=>{alive=false;cancelAnimationFrame(raf);ro.disconnect()};
+}
+
+/* ---------- navigation ---------- */
+async function go(view){
+  if(S.sel){await leaveNote(S.sel);S.sel=null;S.note=null}
+  S.view=view;
+  document.querySelectorAll(".nav button").forEach(b=>
+    b.classList.toggle("on",b.dataset.v===view));
+  $("#listPane").style.display=(view==="library"||view==="inbox")?"flex":"none";
+  if(view==="library")await loadLibrary();
+  else if(view==="inbox")await loadInbox();
+  else if(view==="today")await loadToday();
+  else if(view==="garden")await loadGarden();
+  else if(view==="graph")await loadGraph();
+  renderTree();
+}
+document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>{
+  S.q=null; if(b.dataset.v!=="library"){S.topic=null;S.kind=null}
+  go(b.dataset.v)});
+
+/* ---------- reminders while open ---------- */
+async function pollDue(){
+  try{
+    const r=await api("/api/due");
+    const fresh=r.notes.filter(n=>!S.reminded.has(n.id));
+    if(fresh.length){
+      fresh.forEach(n=>{
+        S.reminded.add(n.id);
+        const t=el("div","toast remind");
+        t.appendChild(el("span","","⏰"));
+        const m=el("div");m.style.flex="1";
+        m.appendChild(el("div","w",n.title));
+        m.appendChild(el("div","s",whenText(n.due)));
+        t.appendChild(m);
+        const done=el("button","","Done");
+        done.onclick=async()=>{await post("/api/note/complete",{id:n.id});
+          t.remove();refresh()};
+        const snooze=el("button","","Snooze 1h");
+        snooze.onclick=async()=>{
+          const w=new Date(Date.now()+36e5);
+          const iso=w.getFullYear()+"-"+String(w.getMonth()+1).padStart(2,"0")+"-"+
+            String(w.getDate()).padStart(2,"0")+"T"+
+            String(w.getHours()).padStart(2,"0")+":"+
+            String(w.getMinutes()).padStart(2,"0")+":00";
+          await post("/api/note/schedule",{id:n.id,when:iso});
+          S.reminded.delete(n.id); t.remove(); refresh()};
+        t.appendChild(done);t.appendChild(snooze);
+        toast(t,20000);
+        if(window.Notification&&Notification.permission==="granted")
+          new Notification(n.title,{body:whenText(n.due)});
+      });
+      await post("/api/reminded",{ids:fresh.map(n=>n.id)});
+    }
+  }catch(e){}
+}
+
+/* ---------- refresh ---------- */
+async function refresh(){
+  S.state=await api("/api/state");
+  $("#bNotes").textContent=S.state.notes;
+  $("#bInbox").textContent=S.state.inbox+S.state.review;
+  const ag=await api("/api/agenda").catch(()=>({notes:[]}));
+  const pending=ag.notes.filter(n=>!n.done).length;
+  $("#bDue").textContent=pending;
+  $("#bDue").style.display=pending?"":"none";
+  $("#stStack").innerHTML=`<b>${S.state.embedder}</b> / ${S.state.router}`;
+  $("#stVault").textContent=S.state.vault;
+  let msg="";
+  if(S.state.coldStart)msg=`cold start · ${S.state.coldStart} more notes before topics form`;
+  if(S.state.embedderChanged)msg=`indexed with ${S.state.embedderChanged} — rebuild needed`;
+  $("#stMsg").textContent=msg;
+  renderTree();
+  if(S.view==="library")await loadLibrary();
+  else if(S.view==="inbox")await loadInbox();
+  else if(S.view==="today")await loadToday();
+}
+
+addEventListener("keydown",e=>{
+  const typing=/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)||
+    document.activeElement.isContentEditable;
+  if((e.ctrlKey||e.metaKey)&&e.key==="k"){e.preventDefault();capEl.focus();capEl.select()}
+  if(e.altKey&&!e.ctrlKey&&(e.key==="n"||e.key==="N")){e.preventDefault();newNote()}
+  if(e.key==="Escape"){capEl.value="";autoGrow();$("#chips").innerHTML="";
+    document.activeElement.blur()}
+  if((e.ctrlKey||e.metaKey)&&e.key==="z"&&!typing){e.preventDefault();
+    post("/api/undo").then(r=>{const t=el("div","toast");
+      t.appendChild(el("span","",r.undone?"↺ undid "+r.undone:"nothing to undo"));
+      toast(t,3000);refresh()})}
+});
+
+capEl.addEventListener("input",()=>{
+  $("#capHint").innerHTML=capEl.value.startsWith("?")
+    ? '<span class="k">Enter</span> search'
+    : '<span class="k">Enter</span> save · <span class="k">Shift ↵</span> newline';
+  if(capEl.value.startsWith("?")){
+    clearTimeout(window._st);
+    window._st=setTimeout(()=>{const q=capEl.value.slice(1).trim();
+      S.q=q||null; if(S.q)go("library")},240);
+  }else if(S.q){S.q=null;go("library")}
+});
+
+if(window.Notification&&Notification.permission==="default")
+  setTimeout(()=>Notification.requestPermission().catch(()=>{}),3000);
+
+/* ---------- theme ---------- */
+// Neumorphism reads best on a light, mid-tone surface, so light is the
+// default; dark is one click away and the choice is remembered per browser.
+function setTheme(t){
+  document.documentElement.setAttribute("data-theme",t);
+  try{localStorage.setItem("mnemo-theme",t)}catch(e){}
+  const b=$("#themeBtn"); if(b)b.textContent=t==="dark"?"☾ dark":"☀ light";
+  if(S.view==="graph")loadGraph();      // the canvas caches its colours
+}
+$("#themeBtn").onclick=()=>setTheme(
+  document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark");
+setTheme(document.documentElement.getAttribute("data-theme")||"light");
+$("#newBtn").onclick=()=>newNote();
+autoGrow();
+refresh().then(()=>emptyPane("Capture something above to begin."));
+setInterval(pollDue,30000); pollDue();
+</script>
+</body>
+</html>

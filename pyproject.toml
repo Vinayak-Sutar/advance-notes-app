@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mnemo"
+version = "0.1.0"
+description = "A note-taking app whose LLM backend decides where each note belongs"
+readme = "README.md"
+requires-python = ">=3.10"
+# No runtime dependencies, deliberately. Everything is Python's standard
+# library, which is what lets a fresh checkout run on any machine with only a
+# Python install -- and what makes the offline mode a genuine fallback rather
+# than a stub.
+dependencies = []
+
+[project.scripts]
+mnemo = "mnemo.cli:main"
+
+[tool.setuptools]
+packages = ["mnemo"]
+
+[tool.setuptools.package-data]
+mnemo = ["schema.sql", "web/*"]

@@ -1,0 +1,3142 @@
+{
+ "when": "2026-10-26 00:43",
+ "ollama": "0.33.2",
+ "machine": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+ "brains": {
+  "gemma3:4b": {
+   "caps": [
+    "completion",
+    "vision"
+   ],
+   "speed": {
+    "load_s": 5.5,
+    "first_token_s": 0.08,
+    "tokens_per_s": 78.1,
+    "size_gb": 2.88,
+    "vram_gb": 3.67,
+    "on_gpu_pct": 100
+   },
+   "noteai": [
+    {
+     "request": "what is 23 x 17?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.7
+    },
+    {
+     "request": "what is 15% of 240?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.7
+    },
+    {
+     "request": "how many items are on this list?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.6
+    },
+    {
+     "request": "how many nights is the hotel?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.7
+    },
+    {
+     "request": "who owns marketing?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.6
+    },
+    {
+     "request": "when are we launching?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.6
+    },
+    {
+     "request": "what is the capital of France?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.7
+    },
+    {
+     "request": "is this a good plan for a beginner?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.9
+    },
+    {
+     "request": "who wrote atomic habits?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.6
+    },
+    {
+     "request": "what can you do in this note?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.8
+    },
+    {
+     "request": "write name of colors here",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 1.0
+    },
+    {
+     "request": "add eggs and bread to the list",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 0.7
+    },
+    {
+     "request": "add a packing list",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 1.2
+    },
+    {
+     "request": "write a 3 day beginner routine below",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 4.6
+    },
+    {
+     "request": "add the steps to make masala chai",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 2.7
+    },
+    {
+     "request": "write the days of the week",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 1.0
+    },
+    {
+     "request": "put a heading called Budget at the top",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 0.8
+    },
+    {
+     "request": "note down that Raj will handle the demo",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 0.8
+    },
+    {
+     "request": "list 5 names for a cat cafe here",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 1.2
+    },
+    {
+     "request": "add a checklist for exam prep",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 1.0
+    },
+    {
+     "request": "make this a checklist",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 1.8
+    },
+    {
+     "request": "fix the spelling",
+     "ok": false,
+     "why": "text lacks ['the meeting', 'discuss', 'budget']",
+     "action": "replace",
+     "secs": 1.9
+    },
+    {
+     "request": "sort the list alphabetically",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 0.9
+    },
+    {
+     "request": "remove bright from the list",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 0.7
+    },
+    {
+     "request": "turn this into bullet points",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 0.9
+    },
+    {
+     "request": "rewrite this more clearly",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 1.3
+    },
+    {
+     "request": "make the list items bold",
+     "ok": false,
+     "why": "text lacks ['**']",
+     "action": "replace",
+     "secs": 1.7
+    },
+    {
+     "request": "mark call bank as done",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 1.9
+    },
+    {
+     "request": "summarise this",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 1.6
+    }
+   ],
+   "chat": [
+    {
+     "q": "which movies did I want to watch?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You have three movies you wanted to watch:\n\n-   **Dune: Part Two**\n-   **Interstellar**\n\nYou also have a reading list with books you wanted to read. Would you like me to remind you about anything?",
+     "secs": 1.1
+    },
+    {
+     "q": "when is the invoice due?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The invoice to Brightside is due on Tue 27 Oct, 10:00 AM. - note 1",
+     "secs": 0.7
+    },
+    {
+     "q": "what should I attach to the invoice?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You should attach the signed estimate. \n\n**Send invoice to Brightside** - note 1.",
+     "secs": 0.6
+    },
+    {
+     "q": "how many nights is the Goa hotel?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The Goa hotel is 4 nights. -",
+     "secs": 0.4
+    },
+    {
+     "q": "what do I need to buy for the Goa trip?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You need to buy sunscreen for your Goa trip.\n\n- Sunscreen",
+     "secs": 0.5
+    },
+    {
+     "q": "what's on my grocery list?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Okay, let\u2019s see what\u2019s on your grocery list.\n\nAccording to note [1], you have:\n\n- milk\n- eggs\n- bread",
+     "secs": 0.9
+    },
+    {
+     "q": "what gift am I getting mom?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You are getting Mom a blue scarf she liked. \n\n- You noted that you need to order it.",
+     "secs": 0.7
+    },
+    {
+     "q": "which days do I go to the gym?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You go to the gym on Monday, Wednesday, and Friday. \n\n- Monday\n- Wednesday\n- Friday",
+     "secs": 0.7
+    },
+    {
+     "q": "who has the office wifi password?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Raj has the office wifi password. -",
+     "secs": 0.5
+    },
+    {
+     "q": "where does Sam live?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Sam lives at Flat 12, Lake View Apartments, Baner, Pune. - **Sam's Address**",
+     "secs": 0.7
+    },
+    {
+     "q": "when is the car service due?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The car service is due at 45,000 km. - **Car Service**\nIt was last done at Pune Motors.",
+     "secs": 0.8
+    },
+    {
+     "q": "what books are on my reading list?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Here\u2019s what\u2019s on your reading list:\n\n- Atomic Habits\n- Deep Work\n- Project Hail Mary",
+     "secs": 0.7
+    },
+    {
+     "q": "who am I watching Interstellar with?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You are watching Interstellar with Sam.",
+     "secs": 0.4
+    },
+    {
+     "q": "how long should I renew the domain for?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You should renew the domain for two years. - **Renew the domain** (note 1)",
+     "secs": 0.6
+    },
+    {
+     "q": "who directed the Dune movie I saved?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Denis Villeneuve directed the *Dune* movie you saved. -",
+     "secs": 0.5
+    },
+    {
+     "q": "what's my passport number?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don\u2019t know your passport number. \n\n- It\u2019s not in your notes.",
+     "secs": 0.6
+    },
+    {
+     "q": "when is my dentist appointment?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don\u2019t know when your dentist appointment is. \n\n- Note 1 mentions an invoice to Brightside due on Tue 27 Oct, 10:00 AM.",
+     "secs": 0.9
+    },
+    {
+     "q": "what's Raj's phone number?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don\u2019t know Raj\u2019s phone number. \n\n- You have a note titled \u201cOffice wifi\u201d which states to ask Raj for the password.\n- You could try to \u201cremind me\u201d to ask Raj for his number if it\u2019s available.",
+     "secs": 1.2
+    },
+    {
+     "q": "which restaurant did I book for Friday?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don\u2019t have any notes about restaurant bookings. \n\n- You have a note titled \u201cGoa trip\u201d which details your travel plans.",
+     "secs": 0.9
+    },
+    {
+     "q": "how much did the Goa flights cost?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "According to note [1], you need to buy sunscreen for your Goa trip. \n\nThe note doesn\u2019t specify the cost of the flights. Sources: 1",
+     "secs": 0.8
+    },
+    {
+     "q": "what is Priya's email address?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don\u2019t know Priya\u2019s email address. \n\nIt\u2019s not in your notes. You could try turning on web search in Settings to look it up.",
+     "secs": 0.9
+    },
+    {
+     "q": "what did the doctor say last week?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don\u2019t know what the doctor said last week. \n\nThe notes don\u2019t contain any information about a doctor\u2019s visit.",
+     "secs": 0.8
+    },
+    {
+     "q": "what's my car's registration number?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don\u2019t know your car\u2019s registration number. \n\nIt\u2019s not in your notes. You could try turning on web search in Settings to look it up.",
+     "secs": 1.0
+    }
+   ],
+   "vision": [
+    {
+     "image": "f29010636b5c39c6.png",
+     "ok": true,
+     "ocr_similarity": 1.0,
+     "described": true,
+     "why": "",
+     "secs": 7.0
+    },
+    {
+     "image": "ef7ee786451afd01.png",
+     "ok": true,
+     "ocr_similarity": 0.998,
+     "described": true,
+     "why": "",
+     "secs": 5.0
+    }
+   ]
+  },
+  "qwen3.5:4b": {
+   "caps": [
+    "completion",
+    "thinking",
+    "tools",
+    "vision"
+   ],
+   "speed": {
+    "load_s": 6.2,
+    "first_token_s": 0.14,
+    "tokens_per_s": 55.1,
+    "size_gb": 3.13,
+    "vram_gb": 3.67,
+    "on_gpu_pct": 100
+   },
+   "noteai": [
+    {
+     "request": "what is 23 x 17?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 1.1
+    },
+    {
+     "request": "what is 15% of 240?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 1.1
+    },
+    {
+     "request": "how many items are on this list?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 1.0
+    },
+    {
+     "request": "how many nights is the hotel?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 1.0
+    },
+    {
+     "request": "who owns marketing?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.9
+    },
+    {
+     "request": "when are we launching?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 1.1
+    },
+    {
+     "request": "what is the capital of France?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 1.2
+    },
+    {
+     "request": "is this a good plan for a beginner?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 1.3
+    },
+    {
+     "request": "who wrote atomic habits?",
+     "ok": false,
+     "why": "reply lacks ['clear']",
+     "action": "answer",
+     "secs": 1.9
+    },
+    {
+     "request": "what can you do in this note?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 1.6
+    },
+    {
+     "request": "write name of colors here",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 1.9
+    },
+    {
+     "request": "add eggs and bread to the list",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 1.2
+    },
+    {
+     "request": "add a packing list",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 2.2
+    },
+    {
+     "request": "write a 3 day beginner routine below",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 4.2
+    },
+    {
+     "request": "add the steps to make masala chai",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 2.9
+    },
+    {
+     "request": "write the days of the week",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 1.8
+    },
+    {
+     "request": "put a heading called Budget at the top",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 1.2
+    },
+    {
+     "request": "note down that Raj will handle the demo",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 1.2
+    },
+    {
+     "request": "list 5 names for a cat cafe here",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 1.7
+    },
+    {
+     "request": "add a checklist for exam prep",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 1.8
+    },
+    {
+     "request": "make this a checklist",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 2.4
+    },
+    {
+     "request": "fix the spelling",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 2.6
+    },
+    {
+     "request": "sort the list alphabetically",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 1.3
+    },
+    {
+     "request": "remove bright from the list",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 1.3
+    },
+    {
+     "request": "turn this into bullet points",
+     "ok": false,
+     "why": "lost lines ['Trip notes']",
+     "action": "replace",
+     "secs": 2.3
+    },
+    {
+     "request": "rewrite this more clearly",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 1.8
+    },
+    {
+     "request": "make the list items bold",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 2.6
+    },
+    {
+     "request": "mark call bank as done",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 2.4
+    },
+    {
+     "request": "summarise this",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 1.8
+    }
+   ],
+   "chat": [
+    {
+     "q": "which movies did I want to watch?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You have two movies you wanted to watch: **Dune: Part Two** and **Interstellar**.\n\n- **Dune: Part Two**: Directed by Denis Villeneuve. You noted to rewatch part one first.\n- **Interstellar**: Directed by Christopher Nolan, 2 hours 49 minutes long. It's scheduled to be watched with Sam on Saturday.",
+     "secs": 2.9
+    },
+    {
+     "q": "when is the invoice due?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The invoice for Brightside is due on **Tue 27 Oct, 10:00 AM**.",
+     "secs": 1.2
+    },
+    {
+     "q": "what should I attach to the invoice?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You should attach the **signed estimate** to the invoice for Brightside.",
+     "secs": 0.9
+    },
+    {
+     "q": "how many nights is the Goa hotel?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The Goa hotel, Taj Holiday Village, is for **4 nights**.",
+     "secs": 0.7
+    },
+    {
+     "q": "what do I need to buy for the Goa trip?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "For your Goa trip, you need to buy **sunscreen**.",
+     "secs": 0.8
+    },
+    {
+     "q": "what's on my grocery list?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Your grocery list includes:\n- **milk**\n- **eggs**\n- **bread**",
+     "secs": 1.7
+    },
+    {
+     "q": "what gift am I getting mom?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You're getting your mom a **blue scarf**, which is the item you ordered for her birthday on November 15th.",
+     "secs": 1.1
+    },
+    {
+     "q": "which days do I go to the gym?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You go to the gym on **Monday**, **Wednesday**, and **Friday**.",
+     "secs": 0.9
+    },
+    {
+     "q": "who has the office wifi password?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Raj has the office wifi password. The network name is Orbit-5G.",
+     "secs": 0.8
+    },
+    {
+     "q": "where does Sam live?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Sam lives at Flat 12, Lake View Apartments, Baner, Pune.",
+     "secs": 0.9
+    },
+    {
+     "q": "when is the car service due?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The car service is due at **45,000 km**. The last service was done at Pune Motors, but there isn't a specific date listed in your notes for when that happened or when the next one is scheduled.",
+     "secs": 1.7
+    },
+    {
+     "q": "what books are on my reading list?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Your reading list includes:\n- **Atomic Habits**\n- **Deep Work**\n- **Project Hail Mary**",
+     "secs": 1.8
+    },
+    {
+     "q": "who am I watching Interstellar with?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You're watching *Interstellar* with Sam.",
+     "secs": 0.8
+    },
+    {
+     "q": "how long should I renew the domain for?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Based on your note **Renew the domain**, you should renew the domain for **two years**.",
+     "secs": 1.0
+    },
+    {
+     "q": "who directed the Dune movie I saved?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The **Dune** movie you saved was directed by Denis Villeneuve.",
+     "secs": 0.9
+    },
+    {
+     "q": "what's my passport number?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "Your notes don't contain your passport number. I can't see it anywhere in your saved information. If you have it written down somewhere else, feel free to share it here.",
+     "secs": 1.9
+    },
+    {
+     "q": "when is my dentist appointment?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't see a dentist appointment in your notes. I could search for it again if you'd like, or you can tell me more about it and I'll help you set a reminder.",
+     "secs": 2.1
+    },
+    {
+     "q": "what's Raj's phone number?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't have Raj's phone number in your notes. You can turn on web search in Settings to look it up.",
+     "secs": 1.1
+    },
+    {
+     "q": "which restaurant did I book for Friday?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't see any restaurant bookings in your notes. Your only trip-related note mentions a Goa hotel but no specific restaurant reservations.",
+     "secs": 1.2
+    },
+    {
+     "q": "how much did the Goa flights cost?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't have information about the cost of your Goa flights in your notes. The note mentions flights on 12 December and a hotel in Goa, but doesn't include pricing details.",
+     "secs": 1.3
+    },
+    {
+     "q": "what is Priya's email address?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't have Priya's email address in your notes. Try searching for \"Priya\" or \"email\" to see if it's saved elsewhere.",
+     "secs": 1.2
+    },
+    {
+     "q": "what did the doctor say last week?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't have any notes about a doctor or anything they said last week. Turning on web search in Settings would let you look it up if you'd like.",
+     "secs": 1.4
+    },
+    {
+     "q": "what's my car's registration number?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "Your notes don't include your car's registration number. I can only see that the next service is due at 45,000 km and it was last done at Pune Motors.",
+     "secs": 1.4
+    }
+   ],
+   "tools": [
+    {
+     "q": "what is 1847 times 23?",
+     "ok": true,
+     "why": "",
+     "tool": "calculator",
+     "secs": 1.7
+    },
+    {
+     "q": "how much is 15% of 2400?",
+     "ok": true,
+     "why": "",
+     "tool": "calculator",
+     "secs": 1.4
+    },
+    {
+     "q": "what did I save about the Goa trip?",
+     "ok": true,
+     "why": "",
+     "tool": "search_notes",
+     "secs": 1.2
+    },
+    {
+     "q": "find my notes about the invoice",
+     "ok": true,
+     "why": "",
+     "tool": "search_notes",
+     "secs": 1.2
+    },
+    {
+     "q": "do I have anything about my mom's birthday?",
+     "ok": true,
+     "why": "",
+     "tool": "search_notes",
+     "secs": 1.2
+    },
+    {
+     "q": "what's in my grocery list?",
+     "ok": true,
+     "why": "",
+     "tool": "search_notes",
+     "secs": 1.2
+    },
+    {
+     "q": "who won the 2026 Formula 1 world championship?",
+     "ok": true,
+     "why": "",
+     "tool": "web_search",
+     "secs": 1.2
+    },
+    {
+     "q": "what's the latest version of Python?",
+     "ok": true,
+     "why": "",
+     "tool": "web_search",
+     "secs": 1.1
+    },
+    {
+     "q": "what's the weather in Pune today?",
+     "ok": true,
+     "why": "",
+     "tool": "web_search",
+     "secs": 1.0
+    },
+    {
+     "q": "who is the current CEO of Microsoft?",
+     "ok": true,
+     "why": "",
+     "tool": "web_search",
+     "secs": 1.2
+    },
+    {
+     "q": "remind me to call the bank tomorrow at 10am",
+     "ok": true,
+     "why": "",
+     "tool": "create_reminder",
+     "secs": 1.5
+    },
+    {
+     "q": "set a reminder to pay rent on the 1st",
+     "ok": true,
+     "why": "",
+     "tool": "create_reminder",
+     "secs": 1.4
+    },
+    {
+     "q": "move my dune note to movies",
+     "ok": true,
+     "why": "",
+     "tool": "move_note",
+     "secs": 1.4
+    },
+    {
+     "q": "put the invoice note in Work",
+     "ok": true,
+     "why": "",
+     "tool": "move_note",
+     "secs": 1.2
+    },
+    {
+     "q": "hi! how are you?",
+     "ok": true,
+     "why": "",
+     "tool": null,
+     "secs": 0.7
+    },
+    {
+     "q": "thanks, that's all for now",
+     "ok": true,
+     "why": "",
+     "tool": null,
+     "secs": 1.0
+    }
+   ],
+   "vision": [
+    {
+     "image": "f29010636b5c39c6.png",
+     "ok": true,
+     "ocr_similarity": 0.92,
+     "described": true,
+     "why": "",
+     "secs": 6.3
+    },
+    {
+     "image": "ef7ee786451afd01.png",
+     "ok": true,
+     "ocr_similarity": 0.998,
+     "described": true,
+     "why": "",
+     "secs": 3.9
+    }
+   ]
+  },
+  "gemma4:e4b": {
+   "caps": [
+    "audio",
+    "completion",
+    "thinking",
+    "tools",
+    "vision"
+   ],
+   "speed": {
+    "load_s": 17.1,
+    "first_token_s": 0.24,
+    "tokens_per_s": 32.9,
+    "size_gb": 0.26,
+    "vram_gb": 4.34,
+    "on_gpu_pct": 100
+   },
+   "noteai": [
+    {
+     "request": "what is 23 x 17?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 1.1
+    },
+    {
+     "request": "what is 15% of 240?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.6
+    },
+    {
+     "request": "how many items are on this list?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.6
+    },
+    {
+     "request": "how many nights is the hotel?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.7
+    },
+    {
+     "request": "who owns marketing?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.5
+    },
+    {
+     "request": "when are we launching?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.6
+    },
+    {
+     "request": "what is the capital of France?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.5
+    },
+    {
+     "request": "is this a good plan for a beginner?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 2.0
+    },
+    {
+     "request": "who wrote atomic habits?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.7
+    },
+    {
+     "request": "what can you do in this note?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 1.1
+    },
+    {
+     "request": "write name of colors here",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 0.9
+    },
+    {
+     "request": "add eggs and bread to the list",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 0.8
+    },
+    {
+     "request": "add a packing list",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 1.2
+    },
+    {
+     "request": "write a 3 day beginner routine below",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 5.8
+    },
+    {
+     "request": "add the steps to make masala chai",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 3.1
+    },
+    {
+     "request": "write the days of the week",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 1.0
+    },
+    {
+     "request": "put a heading called Budget at the top",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 1.0
+    },
+    {
+     "request": "note down that Raj will handle the demo",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 0.7
+    },
+    {
+     "request": "list 5 names for a cat cafe here",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 1.6
+    },
+    {
+     "request": "add a checklist for exam prep",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 1.5
+    },
+    {
+     "request": "make this a checklist",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 1.0
+    },
+    {
+     "request": "fix the spelling",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 2.4
+    },
+    {
+     "request": "sort the list alphabetically",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 0.9
+    },
+    {
+     "request": "remove bright from the list",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 0.7
+    },
+    {
+     "request": "turn this into bullet points",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 1.0
+    },
+    {
+     "request": "rewrite this more clearly",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 1.3
+    },
+    {
+     "request": "make the list items bold",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 1.9
+    },
+    {
+     "request": "mark call bank as done",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 0.9
+    },
+    {
+     "request": "summarise this",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 1.2
+    }
+   ],
+   "chat": [
+    {
+     "q": "which movies did I want to watch?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You wanted to watch:\n- Dune: Part Two (but you should rewatch part one first)\n- Interstellar (with Sam on Saturday)",
+     "secs": 1.6
+    },
+    {
+     "q": "when is the invoice due?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The invoice is due on Tue 27 Oct, 10:00 AM.",
+     "secs": 0.6
+    },
+    {
+     "q": "what should I attach to the invoice?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You should attach the signed estimate.",
+     "secs": 0.4
+    },
+    {
+     "q": "how many nights is the Goa hotel?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The Goa hotel stay is for 4 nights. \ud83d\ude0a",
+     "secs": 0.9
+    },
+    {
+     "q": "what do I need to buy for the Goa trip?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You need to buy sunscreen for your Goa trip! :)",
+     "secs": 0.7
+    },
+    {
+     "q": "what's on my grocery list?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Your grocery list is:\n- milk\n- eggs\n- bread",
+     "secs": 0.6
+    },
+    {
+     "q": "what gift am I getting mom?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You are getting her the blue scarf she liked.",
+     "secs": 0.6
+    },
+    {
+     "q": "which days do I go to the gym?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You go to the gym on Monday, Wednesday, and Friday.",
+     "secs": 0.5
+    },
+    {
+     "q": "who has the office wifi password?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Raj has the office wifi password.",
+     "secs": 0.4
+    },
+    {
+     "q": "where does Sam live?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Sam lives at Flat 12, Lake View Apartments, Baner, Pune.",
+     "secs": 0.6
+    },
+    {
+     "q": "when is the car service due?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The car service is due at 45,000 km.",
+     "secs": 1.2
+    },
+    {
+     "q": "what books are on my reading list?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Your reading list includes:\n- Atomic Habits\n- Deep Work\n- Project Hail Mary",
+     "secs": 0.9
+    },
+    {
+     "q": "who am I watching Interstellar with?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You are watching Interstellar with Sam.",
+     "secs": 0.5
+    },
+    {
+     "q": "how long should I renew the domain for?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You should renew the domain for two years.",
+     "secs": 0.5
+    },
+    {
+     "q": "who directed the Dune movie I saved?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Denis Villeneuve directed the Dune movie you saved.",
+     "secs": 0.4
+    },
+    {
+     "q": "what's my passport number?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't have your passport number in your notes.",
+     "secs": 0.6
+    },
+    {
+     "q": "when is my dentist appointment?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't see any information about a dentist appointment in your notes.",
+     "secs": 0.6
+    },
+    {
+     "q": "what's Raj's phone number?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't have Raj's phone number in your notes.",
+     "secs": 0.7
+    },
+    {
+     "q": "which restaurant did I book for Friday?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't see any information about a restaurant booking for Friday in your notes.",
+     "secs": 0.7
+    },
+    {
+     "q": "how much did the Goa flights cost?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't have the cost of the Goa flights in your notes. Your note just mentions the flights are on 12 Dec.",
+     "secs": 1.2
+    },
+    {
+     "q": "what is Priya's email address?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't have Priya's email address in your notes.",
+     "secs": 0.6
+    },
+    {
+     "q": "what did the doctor say last week?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't have any notes about what a doctor said last week.",
+     "secs": 0.6
+    },
+    {
+     "q": "what's my car's registration number?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't see your car's registration number in your notes.",
+     "secs": 0.5
+    }
+   ],
+   "tools": [
+    {
+     "q": "what is 1847 times 23?",
+     "ok": true,
+     "why": "",
+     "tool": "calculator",
+     "secs": 0.8
+    },
+    {
+     "q": "how much is 15% of 2400?",
+     "ok": true,
+     "why": "",
+     "tool": "calculator",
+     "secs": 0.4
+    },
+    {
+     "q": "what did I save about the Goa trip?",
+     "ok": true,
+     "why": "",
+     "tool": "search_notes",
+     "secs": 0.3
+    },
+    {
+     "q": "find my notes about the invoice",
+     "ok": true,
+     "why": "",
+     "tool": "search_notes",
+     "secs": 0.3
+    },
+    {
+     "q": "do I have anything about my mom's birthday?",
+     "ok": true,
+     "why": "",
+     "tool": "search_notes",
+     "secs": 0.4
+    },
+    {
+     "q": "what's in my grocery list?",
+     "ok": true,
+     "why": "",
+     "tool": "search_notes",
+     "secs": 0.3
+    },
+    {
+     "q": "who won the 2026 Formula 1 world championship?",
+     "ok": true,
+     "why": "",
+     "tool": "web_search",
+     "secs": 0.5
+    },
+    {
+     "q": "what's the latest version of Python?",
+     "ok": true,
+     "why": "",
+     "tool": "web_search",
+     "secs": 0.4
+    },
+    {
+     "q": "what's the weather in Pune today?",
+     "ok": true,
+     "why": "",
+     "tool": "web_search",
+     "secs": 0.4
+    },
+    {
+     "q": "who is the current CEO of Microsoft?",
+     "ok": true,
+     "why": "",
+     "tool": "web_search",
+     "secs": 0.4
+    },
+    {
+     "q": "remind me to call the bank tomorrow at 10am",
+     "ok": true,
+     "why": "",
+     "tool": "create_reminder",
+     "secs": 0.5
+    },
+    {
+     "q": "set a reminder to pay rent on the 1st",
+     "ok": true,
+     "why": "",
+     "tool": "create_reminder",
+     "secs": 0.5
+    },
+    {
+     "q": "move my dune note to movies",
+     "ok": true,
+     "why": "",
+     "tool": "move_note",
+     "secs": 0.4
+    },
+    {
+     "q": "put the invoice note in Work",
+     "ok": true,
+     "why": "",
+     "tool": "move_note",
+     "secs": 0.4
+    },
+    {
+     "q": "hi! how are you?",
+     "ok": true,
+     "why": "",
+     "tool": null,
+     "secs": 0.4
+    },
+    {
+     "q": "thanks, that's all for now",
+     "ok": true,
+     "why": "",
+     "tool": null,
+     "secs": 0.4
+    }
+   ],
+   "vision": [
+    {
+     "image": "f29010636b5c39c6.png",
+     "ok": true,
+     "ocr_similarity": 1.0,
+     "described": true,
+     "why": "",
+     "secs": 5.9
+    },
+    {
+     "image": "ef7ee786451afd01.png",
+     "ok": true,
+     "ocr_similarity": 0.998,
+     "described": true,
+     "why": "",
+     "secs": 4.7
+    }
+   ]
+  },
+  "qwen3.5:2b": {
+   "caps": [
+    "completion",
+    "thinking",
+    "tools",
+    "vision"
+   ],
+   "speed": {
+    "load_s": 6.4,
+    "first_token_s": 0.09,
+    "tokens_per_s": 84.1,
+    "size_gb": 2.36,
+    "vram_gb": 2.94,
+    "on_gpu_pct": 100
+   },
+   "noteai": [
+    {
+     "request": "what is 23 x 17?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.7
+    },
+    {
+     "request": "what is 15% of 240?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.7
+    },
+    {
+     "request": "how many items are on this list?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.6
+    },
+    {
+     "request": "how many nights is the hotel?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.6
+    },
+    {
+     "request": "who owns marketing?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.5
+    },
+    {
+     "request": "when are we launching?",
+     "ok": false,
+     "why": "reply lacks ['march']",
+     "action": "answer",
+     "secs": 0.5
+    },
+    {
+     "request": "what is the capital of France?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.7
+    },
+    {
+     "request": "is this a good plan for a beginner?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 1.5
+    },
+    {
+     "request": "who wrote atomic habits?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.7
+    },
+    {
+     "request": "what can you do in this note?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.8
+    },
+    {
+     "request": "write name of colors here",
+     "ok": false,
+     "why": "did answer, expected add",
+     "action": "answer",
+     "secs": 0.7
+    },
+    {
+     "request": "add eggs and bread to the list",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 0.8
+    },
+    {
+     "request": "add a packing list",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 1.2
+    },
+    {
+     "request": "write a 3 day beginner routine below",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 3.2
+    },
+    {
+     "request": "add the steps to make masala chai",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 2.0
+    },
+    {
+     "request": "write the days of the week",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 0.9
+    },
+    {
+     "request": "put a heading called Budget at the top",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 0.8
+    },
+    {
+     "request": "note down that Raj will handle the demo",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 0.7
+    },
+    {
+     "request": "list 5 names for a cat cafe here",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 0.9
+    },
+    {
+     "request": "add a checklist for exam prep",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 0.9
+    },
+    {
+     "request": "make this a checklist",
+     "ok": false,
+     "why": "text lacks ['[ ]']",
+     "action": "replace",
+     "secs": 1.5
+    },
+    {
+     "request": "fix the spelling",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 1.7
+    },
+    {
+     "request": "sort the list alphabetically",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 0.8
+    },
+    {
+     "request": "remove bright from the list",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 0.8
+    },
+    {
+     "request": "turn this into bullet points",
+     "ok": false,
+     "why": "lost lines ['Trip notes']",
+     "action": "replace",
+     "secs": 1.6
+    },
+    {
+     "request": "rewrite this more clearly",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 0.9
+    },
+    {
+     "request": "make the list items bold",
+     "ok": false,
+     "why": "text lacks ['**']",
+     "action": "replace",
+     "secs": 1.7
+    },
+    {
+     "request": "mark call bank as done",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 1.6
+    },
+    {
+     "request": "summarise this",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 0.7
+    }
+   ],
+   "chat": [
+    {
+     "q": "which movies did I want to watch?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Based on your notes, you have two movies planned:\n\n*   **Dune: Part Two** - Rewatch part one first, directed by Denis Villeneuve.\n*   **Interstellar** - Watch with Sam on Saturday (Christopher Nolan, 2h 49m).\n\nYou also have a reading list for *Atomic Habits*, *Deep Work*, and *Project Hail Mary*.",
+     "secs": 1.8
+    },
+    {
+     "q": "when is the invoice due?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The invoice is due on **Tue 27 Oct, 10:00 AM**.",
+     "secs": 1.0
+    },
+    {
+     "q": "what should I attach to the invoice?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Based on your note, you should attach the **signed estimate** to the invoice. The note says \"Attach the signed estimate\" under the instruction for sending the invoice to Brightside.",
+     "secs": 1.2
+    },
+    {
+     "q": "how many nights is the Goa hotel?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The Goa hotel is a **4-night** stay at the Taj Holiday Village.",
+     "secs": 1.0
+    },
+    {
+     "q": "what do I need to buy for the Goa trip?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Based on your notes, you need to buy **sunscreen** for the Goa trip.\n\nHere are the details:\n- **Trip**: Goa trip (collection: Travel)\n- **Flights**: 12 Dec\n- **Hotel**: Taj Holiday Village, 4 nights\n- **Item needed**: Sunscreen",
+     "secs": 1.6
+    },
+    {
+     "q": "what's on my grocery list?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Your grocery list includes:\n- Milk\n- Eggs\n- Bread",
+     "secs": 0.9
+    },
+    {
+     "q": "what gift am I getting mom?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You're getting a **blue scarf** for your mom's birthday! That's what you ordered.",
+     "secs": 0.9
+    },
+    {
+     "q": "which days do I go to the gym?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Based on your notes, you go to the gym on **Monday**, **Wednesday**, and **Friday**.\n\nHere is the breakdown from your note:\n*   Pushups 3x10 and squats 3x15 are scheduled for Monday, Wednesday, and Friday.",
+     "secs": 1.1
+    },
+    {
+     "q": "who has the office wifi password?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Based on your notes, the person with the office wifi password is **Raj**.\n\nYou can ask him to provide it: \"remind me\" or \"save\".",
+     "secs": 1.1
+    },
+    {
+     "q": "where does Sam live?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Sam lives at Flat 12, Lake View Apartments, Baner, Pune.",
+     "secs": 0.9
+    },
+    {
+     "q": "when is the car service due?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The car service is due when the vehicle reaches **45,000 km**. The last time it was serviced was at Pune Motors.",
+     "secs": 1.1
+    },
+    {
+     "q": "what books are on my reading list?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Your reading list includes three books:\n\n- **Atomic Habits**\n- **Deep Work**\n- **Project Hail Mary**",
+     "secs": 1.1
+    },
+    {
+     "q": "who am I watching Interstellar with?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Based on your notes, you are watching **Interstellar** with **Sam**.\n\nThe note says \"Watch with Sam on Saturday.\"",
+     "secs": 0.5
+    },
+    {
+     "q": "how long should I renew the domain for?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The note says you should renew it for **two years**.\n\nThat's a standard renewal period, and the note also mentions using the company card to pay for it.",
+     "secs": 0.7
+    },
+    {
+     "q": "who directed the Dune movie I saved?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The movie you saved, **Dune: Part Two**, was directed by Denis Villeneuve.",
+     "secs": 0.8
+    },
+    {
+     "q": "what's my passport number?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't have your passport number in my notes. I can only see information about your office wifi network. To find it, you might need to check with Raj or look elsewhere.",
+     "secs": 1.1
+    },
+    {
+     "q": "when is my dentist appointment?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I couldn't find a specific note about your dentist appointment in my search. Let me check if there's anything else in your notes that might help.I couldn't find a specific note about your dentist appointment in my search. I only found information about sending an invoice to Brightside and a Goa trip. If you'd like me to remind you of the invoice due date, you can say \"remind me\" or \"save\".",
+     "secs": 2.2
+    },
+    {
+     "q": "what's Raj's phone number?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't have Raj's phone number in your notes or elsewhere. I can only see his name and that you asked him for the office wifi password. If you'd like to save a reminder to ask him again, you can say \"remind me\" with the time you want.",
+     "secs": 1.0
+    },
+    {
+     "q": "which restaurant did I book for Friday?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I couldn't find a note about which restaurant you booked for Friday. The notes I have are about your Goa trip, gym plan, and an invoice to Brightside. If you'd like me to remind you to book a restaurant or move a note, just let me know!",
+     "secs": 1.4
+    },
+    {
+     "q": "how much did the Goa flights cost?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't have information about the cost of the Goa flights in your notes. I can only see details like the dates and hotel name, but not the price. If you'd like to find out, I can search for it using web search.",
+     "secs": 0.9
+    },
+    {
+     "q": "what is Priya's email address?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I couldn't find Priya's email address in your notes or general knowledge. I'll let you know if I can help with anything else!",
+     "secs": 1.1
+    },
+    {
+     "q": "what did the doctor say last week?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't have any notes about a doctor's visit or conversation with one. I can only see your own notes and tasks, which don't mention this. If you'd like me to search for more information, I could turn on web search in the Settings.",
+     "secs": 0.9
+    },
+    {
+     "q": "what's my car's registration number?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't have your car's registration number in your notes or general knowledge. I can only see that you're due for a car service at 45,000 km and it was done at Pune Motors.",
+     "secs": 0.7
+    }
+   ],
+   "tools": [
+    {
+     "q": "what is 1847 times 23?",
+     "ok": true,
+     "why": "",
+     "tool": "calculator",
+     "secs": 0.7
+    },
+    {
+     "q": "how much is 15% of 2400?",
+     "ok": true,
+     "why": "",
+     "tool": "calculator",
+     "secs": 0.6
+    },
+    {
+     "q": "what did I save about the Goa trip?",
+     "ok": true,
+     "why": "",
+     "tool": "search_notes",
+     "secs": 0.5
+    },
+    {
+     "q": "find my notes about the invoice",
+     "ok": true,
+     "why": "",
+     "tool": "search_notes",
+     "secs": 0.5
+    },
+    {
+     "q": "do I have anything about my mom's birthday?",
+     "ok": true,
+     "why": "",
+     "tool": "search_notes",
+     "secs": 0.5
+    },
+    {
+     "q": "what's in my grocery list?",
+     "ok": true,
+     "why": "",
+     "tool": "search_notes",
+     "secs": 0.5
+    },
+    {
+     "q": "who won the 2026 Formula 1 world championship?",
+     "ok": true,
+     "why": "",
+     "tool": "web_search",
+     "secs": 0.6
+    },
+    {
+     "q": "what's the latest version of Python?",
+     "ok": true,
+     "why": "",
+     "tool": "web_search",
+     "secs": 0.5
+    },
+    {
+     "q": "what's the weather in Pune today?",
+     "ok": true,
+     "why": "",
+     "tool": "web_search",
+     "secs": 0.5
+    },
+    {
+     "q": "who is the current CEO of Microsoft?",
+     "ok": false,
+     "why": "no tool used",
+     "tool": null,
+     "secs": 0.5
+    },
+    {
+     "q": "remind me to call the bank tomorrow at 10am",
+     "ok": true,
+     "why": "",
+     "tool": "create_reminder",
+     "secs": 0.7
+    },
+    {
+     "q": "set a reminder to pay rent on the 1st",
+     "ok": true,
+     "why": "",
+     "tool": "create_reminder",
+     "secs": 0.7
+    },
+    {
+     "q": "move my dune note to movies",
+     "ok": true,
+     "why": "",
+     "tool": "move_note",
+     "secs": 0.7
+    },
+    {
+     "q": "put the invoice note in Work",
+     "ok": true,
+     "why": "",
+     "tool": "move_note",
+     "secs": 0.7
+    },
+    {
+     "q": "hi! how are you?",
+     "ok": true,
+     "why": "",
+     "tool": null,
+     "secs": 0.4
+    },
+    {
+     "q": "thanks, that's all for now",
+     "ok": true,
+     "why": "",
+     "tool": null,
+     "secs": 0.3
+    }
+   ],
+   "vision": [
+    {
+     "image": "f29010636b5c39c6.png",
+     "ok": true,
+     "ocr_similarity": 0.916,
+     "described": true,
+     "why": "",
+     "secs": 2.7
+    },
+    {
+     "image": "ef7ee786451afd01.png",
+     "ok": true,
+     "ocr_similarity": 0.998,
+     "described": true,
+     "why": "",
+     "secs": 1.8
+    }
+   ]
+  },
+  "deepseek-r1:8b": {
+   "caps": [
+    "completion",
+    "thinking",
+    "tools"
+   ],
+   "speed": {
+    "load_s": 8.7,
+    "first_token_s": 13.03,
+    "tokens_per_s": 12.6,
+    "size_gb": 5.97,
+    "vram_gb": 4.05,
+    "on_gpu_pct": 70
+   },
+   "noteai": [
+    {
+     "request": "what is 23 x 17?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 27.6
+    },
+    {
+     "request": "what is 15% of 240?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 23.7
+    },
+    {
+     "request": "how many items are on this list?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 23.3
+    },
+    {
+     "request": "how many nights is the hotel?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 18.3
+    },
+    {
+     "request": "who owns marketing?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 35.7
+    },
+    {
+     "request": "when are we launching?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 107.1
+    },
+    {
+     "request": "what is the capital of France?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 27.0
+    },
+    {
+     "request": "is this a good plan for a beginner?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 126.0
+    },
+    {
+     "request": "who wrote atomic habits?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 50.6
+    },
+    {
+     "request": "what can you do in this note?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 34.2
+    },
+    {
+     "request": "write name of colors here",
+     "ok": false,
+     "why": "error ModelUnavailable: timed out",
+     "action": null,
+     "secs": 180.0
+    },
+    {
+     "request": "add eggs and bread to the list",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 52.2
+    },
+    {
+     "request": "add a packing list",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 31.1
+    },
+    {
+     "request": "write a 3 day beginner routine below",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 48.9
+    },
+    {
+     "request": "add the steps to make masala chai",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 33.0
+    },
+    {
+     "request": "write the days of the week",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 121.6
+    },
+    {
+     "request": "put a heading called Budget at the top",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 26.3
+    },
+    {
+     "request": "note down that Raj will handle the demo",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 27.4
+    },
+    {
+     "request": "list 5 names for a cat cafe here",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 47.4
+    },
+    {
+     "request": "add a checklist for exam prep",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 39.4
+    },
+    {
+     "request": "make this a checklist",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 33.4
+    },
+    {
+     "request": "fix the spelling",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 101.1
+    },
+    {
+     "request": "sort the list alphabetically",
+     "ok": false,
+     "why": "wrong order",
+     "action": "replace",
+     "secs": 25.7
+    },
+    {
+     "request": "remove bright from the list",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 31.4
+    },
+    {
+     "request": "turn this into bullet points",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 29.9
+    },
+    {
+     "request": "rewrite this more clearly",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 38.7
+    },
+    {
+     "request": "make the list items bold",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 108.9
+    },
+    {
+     "request": "mark call bank as done",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 40.5
+    },
+    {
+     "request": "summarise this",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 45.2
+    }
+   ],
+   "chat": [
+    {
+     "q": "which movies did I want to watch?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You want to watch **Dune: Part Two** and **Interstellar**.",
+     "secs": 25.0
+    },
+    {
+     "q": "when is the invoice due?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The invoice is due on **Tue 27 Oct, 10:00 AM**. You have a reminder set for that.",
+     "secs": 19.7
+    },
+    {
+     "q": "what should I attach to the invoice?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "From your note, you need to **attach the signed estimate**.",
+     "secs": 29.9
+    },
+    {
+     "q": "how many nights is the Goa hotel?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "According to your note, the Goa hotel is for **4 nights**.",
+     "secs": 17.9
+    },
+    {
+     "q": "what do I need to buy for the Goa trip?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Based on your notes, you need to buy **sunscreen** for your Goa trip.\n\nHere's a list of other common things you might want to consider for your trip:\n*   Passport (if not already in notes)\n*   Travel documents (visa, ID)\n*   Clothing suitable for the weather\n*   Toiletries\n*   Any necessary medications",
+     "secs": 26.7
+    },
+    {
+     "q": "what's on my grocery list?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Your grocery list has the following items:\n- milk\n- eggs\n- bread",
+     "secs": 19.6
+    },
+    {
+     "q": "what gift am I getting mom?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You're getting your mom the **blue scarf**! It's listed in your note for her birthday.",
+     "secs": 21.3
+    },
+    {
+     "q": "which days do I go to the gym?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You go to the gym on **Monday**, **Wednesday**, and **Friday**. Here's the plan from your notes:\n\n*   Monday: Pushups (3 sets of 10)\n*   Wednesday: Squats (3 sets of 15)\n*   Friday: Pushups (3 sets of 10)",
+     "secs": 23.6
+    },
+    {
+     "q": "who has the office wifi password?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "According to your note, you should ask Raj for the office wifi password.",
+     "secs": 27.0
+    },
+    {
+     "q": "where does Sam live?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "**Sam's address** is Flat 12, Lake View Apartments, Baner, Pune.",
+     "secs": 24.5
+    },
+    {
+     "q": "when is the car service due?",
+     "ok": false,
+     "why": "missing any of ['45,000', '45000', '45 000']",
+     "no_answer": false,
+     "answer": "The car service note doesn't specify a due date. You can set a reminder using the 'remind me' command if you need one.",
+     "secs": 27.5
+    },
+    {
+     "q": "what books are on my reading list?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Your reading list contains:\n\n- **Atomic Habits**\n- **Deep Work**\n- **Project Hail Mary**",
+     "secs": 21.4
+    },
+    {
+     "q": "who am I watching Interstellar with?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "**Interstellar** - You're watching with Sam.",
+     "secs": 22.1
+    },
+    {
+     "q": "how long should I renew the domain for?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "**Notes:**\n*   [1] Renew the domain (collection: Work; kind: task; due: Sun 1 Nov, 9:00 AM (reminder on); saved: Sun 25 Oct, 3:37 PM)\n    -   notesapp.dev runs out soon. Renew it for two years with the company card.\n\nYou should renew the domain for two years, as that's what you've already planned in your note. The reminder is set to help you stay on track.",
+     "secs": 41.7
+    },
+    {
+     "q": "who directed the Dune movie I saved?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "**Dune: Part Two** was directed by **Denis Villeneuve**. You saved this note, so the information is right there.",
+     "secs": 22.5
+    },
+    {
+     "q": "what's my passport number?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't have access to your passport number. Please check your saved notes or remind me to help you find it.",
+     "secs": 31.5
+    },
+    {
+     "q": "when is my dentist appointment?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't see your dentist appointment in your notes. You can check your notes or use the 'remind me' feature to set a reminder.",
+     "secs": 23.3
+    },
+    {
+     "q": "what's Raj's phone number?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't have Raj's phone number in your notes. You can save it using the \"save\" command if you remember it.",
+     "secs": 17.7
+    },
+    {
+     "q": "which restaurant did I book for Friday?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't see any restaurant booking in your notes for Friday. You can remind me if you've saved it elsewhere or let me know the date and title of the note you're looking for.",
+     "secs": 38.3
+    },
+    {
+     "q": "how much did the Goa flights cost?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't have the cost of your Goa flights stored in your notes. You can remind me if you've added that detail later.",
+     "secs": 23.1
+    },
+    {
+     "q": "what is Priya's email address?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "Priya's email address isn't in your notes. You can try asking her directly or checking if you saved it elsewhere.",
+     "secs": 25.1
+    },
+    {
+     "q": "what did the doctor say last week?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't have any notes or information about what the doctor said last week. If you'd like to save details from your doctor's appointment, you can create a new note in Notes.",
+     "secs": 24.8
+    },
+    {
+     "q": "what's my car's registration number?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't have your car's registration number in my notes. You can save it using the command \"save\" or \"remind me\".",
+     "secs": 17.6
+    }
+   ],
+   "tools": [
+    {
+     "q": "what is 1847 times 23?",
+     "ok": false,
+     "why": "no tool used",
+     "tool": null,
+     "secs": 19.3
+    },
+    {
+     "q": "how much is 15% of 2400?",
+     "ok": false,
+     "why": "no tool used",
+     "tool": null,
+     "secs": 23.2
+    },
+    {
+     "q": "what did I save about the Goa trip?",
+     "ok": false,
+     "why": "no tool used",
+     "tool": null,
+     "secs": 26.3
+    },
+    {
+     "q": "find my notes about the invoice",
+     "ok": false,
+     "why": "no tool used",
+     "tool": null,
+     "secs": 15.5
+    },
+    {
+     "q": "do I have anything about my mom's birthday?",
+     "ok": false,
+     "why": "no tool used",
+     "tool": null,
+     "secs": 21.3
+    },
+    {
+     "q": "what's in my grocery list?",
+     "ok": false,
+     "why": "no tool used",
+     "tool": null,
+     "secs": 25.3
+    },
+    {
+     "q": "who won the 2026 Formula 1 world championship?",
+     "ok": false,
+     "why": "no tool used",
+     "tool": null,
+     "secs": 26.6
+    },
+    {
+     "q": "what's the latest version of Python?",
+     "ok": false,
+     "why": "no tool used",
+     "tool": null,
+     "secs": 17.2
+    },
+    {
+     "q": "what's the weather in Pune today?",
+     "ok": false,
+     "why": "no tool used",
+     "tool": null,
+     "secs": 13.0
+    },
+    {
+     "q": "who is the current CEO of Microsoft?",
+     "ok": false,
+     "why": "no tool used",
+     "tool": null,
+     "secs": 14.4
+    },
+    {
+     "q": "remind me to call the bank tomorrow at 10am",
+     "ok": false,
+     "why": "no tool used",
+     "tool": null,
+     "secs": 22.0
+    },
+    {
+     "q": "set a reminder to pay rent on the 1st",
+     "ok": false,
+     "why": "no tool used",
+     "tool": null,
+     "secs": 18.5
+    },
+    {
+     "q": "move my dune note to movies",
+     "ok": false,
+     "why": "no tool used",
+     "tool": null,
+     "secs": 18.0
+    },
+    {
+     "q": "put the invoice note in Work",
+     "ok": false,
+     "why": "no tool used",
+     "tool": null,
+     "secs": 21.9
+    },
+    {
+     "q": "hi! how are you?",
+     "ok": true,
+     "why": "",
+     "tool": null,
+     "secs": 13.8
+    },
+    {
+     "q": "thanks, that's all for now",
+     "ok": true,
+     "why": "",
+     "tool": null,
+     "secs": 12.8
+    }
+   ]
+  },
+  "qwen3.5:9b": {
+   "caps": [
+    "completion",
+    "thinking",
+    "tools",
+    "vision"
+   ],
+   "speed": {
+    "load_s": 14.5,
+    "first_token_s": 0.87,
+    "tokens_per_s": 7.1,
+    "size_gb": 6.25,
+    "vram_gb": 4.16,
+    "on_gpu_pct": 55
+   },
+   "noteai": [
+    {
+     "request": "what is 23 x 17?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 7.2
+    },
+    {
+     "request": "what is 15% of 240?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 6.9
+    },
+    {
+     "request": "how many items are on this list?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 7.3
+    },
+    {
+     "request": "how many nights is the hotel?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 5.0
+    },
+    {
+     "request": "who owns marketing?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 5.5
+    },
+    {
+     "request": "when are we launching?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 5.3
+    },
+    {
+     "request": "what is the capital of France?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 6.7
+    },
+    {
+     "request": "is this a good plan for a beginner?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 11.9
+    },
+    {
+     "request": "who wrote atomic habits?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 6.7
+    },
+    {
+     "request": "what can you do in this note?",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 7.9
+    },
+    {
+     "request": "write name of colors here",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 9.4
+    },
+    {
+     "request": "add eggs and bread to the list",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 7.4
+    },
+    {
+     "request": "add a packing list",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 12.5
+    },
+    {
+     "request": "write a 3 day beginner routine below",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 39.8
+    },
+    {
+     "request": "add the steps to make masala chai",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 17.5
+    },
+    {
+     "request": "write the days of the week",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 9.6
+    },
+    {
+     "request": "put a heading called Budget at the top",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 7.7
+    },
+    {
+     "request": "note down that Raj will handle the demo",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 7.0
+    },
+    {
+     "request": "list 5 names for a cat cafe here",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 10.5
+    },
+    {
+     "request": "add a checklist for exam prep",
+     "ok": true,
+     "why": "",
+     "action": "add",
+     "secs": 9.7
+    },
+    {
+     "request": "make this a checklist",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 18.0
+    },
+    {
+     "request": "fix the spelling",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 19.2
+    },
+    {
+     "request": "sort the list alphabetically",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 7.7
+    },
+    {
+     "request": "remove bright from the list",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 8.0
+    },
+    {
+     "request": "turn this into bullet points",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 8.0
+    },
+    {
+     "request": "rewrite this more clearly",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 9.2
+    },
+    {
+     "request": "make the list items bold",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 18.0
+    },
+    {
+     "request": "mark call bank as done",
+     "ok": true,
+     "why": "",
+     "action": "replace",
+     "secs": 9.0
+    },
+    {
+     "request": "summarise this",
+     "ok": true,
+     "why": "",
+     "action": "answer",
+     "secs": 10.8
+    }
+   ],
+   "chat": [
+    {
+     "q": "which movies did I want to watch?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Based on your notes, you wanted to watch **Dune: Part Two** and **Interstellar**.",
+     "secs": 7.2
+    },
+    {
+     "q": "when is the invoice due?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The invoice for Brightside is due on **Tue 27 Oct at 10:00 AM**.",
+     "secs": 6.0
+    },
+    {
+     "q": "what should I attach to the invoice?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Based on your note, you should **attach the signed estimate** to the invoice for Brightside.",
+     "secs": 4.7
+    },
+    {
+     "q": "how many nights is the Goa hotel?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The Goa trip note says you're staying at the Taj Holiday Village for **4 nights**.",
+     "secs": 4.3
+    },
+    {
+     "q": "what do I need to buy for the Goa trip?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "For your Goa trip, you need to **buy sunscreen**.",
+     "secs": 3.5
+    },
+    {
+     "q": "what's on my grocery list?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Your grocery list includes:\n- milk\n- eggs\n- bread",
+     "secs": 3.9
+    },
+    {
+     "q": "what gift am I getting mom?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You're getting her a **blue scarf** for her birthday! \ud83c\udf81",
+     "secs": 4.3
+    },
+    {
+     "q": "which days do I go to the gym?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Based on your notes, you go to the gym on **Monday, Wednesday, and Friday**.",
+     "secs": 5.0
+    },
+    {
+     "q": "who has the office wifi password?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The office wifi password is with **Raj**.",
+     "secs": 3.4
+    },
+    {
+     "q": "where does Sam live?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Sam lives at Flat 12, Lake View Apartments, Baner, Pune.",
+     "secs": 4.5
+    },
+    {
+     "q": "when is the car service due?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "According to your notes, the car service is due at **45,000 km**. The last service was done at Pune Motors.",
+     "secs": 6.7
+    },
+    {
+     "q": "what books are on my reading list?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Your reading list includes **Atomic Habits**, **Deep Work**, and **Project Hail Mary**.",
+     "secs": 4.7
+    },
+    {
+     "q": "who am I watching Interstellar with?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "You're watching *Interstellar* with **Sam**.",
+     "secs": 3.4
+    },
+    {
+     "q": "how long should I renew the domain for?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "Your note says to renew **notesapp.dev** for **two years**.",
+     "secs": 4.0
+    },
+    {
+     "q": "who directed the Dune movie I saved?",
+     "ok": true,
+     "why": "",
+     "no_answer": false,
+     "answer": "The **Dune** movie you saved was directed by **Denis Villeneuve**. He also directed *Dune: Part Two*.",
+     "secs": 5.6
+    },
+    {
+     "q": "what's my passport number?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't know your passport number. It isn't in your notes, and I can't look it up online since web search is currently off. You might want to check your physical passport or ask a trusted contact who has seen it before.",
+     "secs": 8.9
+    },
+    {
+     "q": "when is my dentist appointment?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't see a dentist appointment in your notes. It might be under a different title or perhaps you haven't saved it yet. If you'd like, I can help you create a reminder for it!",
+     "secs": 7.8
+    },
+    {
+     "q": "what's Raj's phone number?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't see Raj's phone number in your notes. You might want to check with him directly or save the number when you get it.",
+     "secs": 6.1
+    },
+    {
+     "q": "which restaurant did I book for Friday?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't see any notes about a restaurant booking for Friday in your current notes. Could you double-check if you saved that detail somewhere else, or perhaps it was part of a different note?",
+     "secs": 9.1
+    },
+    {
+     "q": "how much did the Goa flights cost?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't see the flight costs listed in your notes for the Goa trip. You mentioned the flights are on 12 Dec and you're staying at Taj Holiday Village, but the price isn't recorded there.",
+     "secs": 8.4
+    },
+    {
+     "q": "what is Priya's email address?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't see a note about Priya's email address in your notes. I'd be happy to help you find it if you have any other details or if you'd like me to search for it elsewhere.",
+     "secs": 8.0
+    },
+    {
+     "q": "what did the doctor say last week?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't see any notes about what a doctor said last week in your notes. If you'd like me to save that information for you, please start your message with \"save\" or \"remind me\".",
+     "secs": 8.9
+    },
+    {
+     "q": "what's my car's registration number?",
+     "ok": true,
+     "why": "",
+     "no_answer": true,
+     "answer": "I don't know your car's registration number from your notes. It isn't listed in the Car service note or anywhere else you've shared. You might want to check your vehicle documents or ask a family member who keeps track of it.",
+     "secs": 8.8
+    }
+   ],
+   "tools": [
+    {
+     "q": "what is 1847 times 23?",
+     "ok": true,
+     "why": "",
+     "tool": "calculator",
+     "secs": 6.6
+    },
+    {
+     "q": "how much is 15% of 2400?",
+     "ok": true,
+     "why": "",
+     "tool": "calculator",
+     "secs": 6.1
+    },
+    {
+     "q": "what did I save about the Goa trip?",
+     "ok": true,
+     "why": "",
+     "tool": "search_notes",
+     "secs": 4.9
+    },
+    {
+     "q": "find my notes about the invoice",
+     "ok": true,
+     "why": "",
+     "tool": "search_notes",
+     "secs": 4.7
+    },
+    {
+     "q": "do I have anything about my mom's birthday?",
+     "ok": true,
+     "why": "",
+     "tool": "search_notes",
+     "secs": 4.9
+    },
+    {
+     "q": "what's in my grocery list?",
+     "ok": true,
+     "why": "",
+     "tool": "search_notes",
+     "secs": 4.9
+    },
+    {
+     "q": "who won the 2026 Formula 1 world championship?",
+     "ok": false,
+     "why": "no tool used",
+     "tool": null,
+     "secs": 14.1
+    },
+    {
+     "q": "what's the latest version of Python?",
+     "ok": true,
+     "why": "",
+     "tool": "web_search",
+     "secs": 5.4
+    },
+    {
+     "q": "what's the weather in Pune today?",
+     "ok": true,
+     "why": "",
+     "tool": "web_search",
+     "secs": 5.2
+    },
+    {
+     "q": "who is the current CEO of Microsoft?",
+     "ok": false,
+     "why": "no tool used",
+     "tool": null,
+     "secs": 5.1
+    },
+    {
+     "q": "remind me to call the bank tomorrow at 10am",
+     "ok": true,
+     "why": "",
+     "tool": "create_reminder",
+     "secs": 7.6
+    },
+    {
+     "q": "set a reminder to pay rent on the 1st",
+     "ok": true,
+     "why": "",
+     "tool": "create_reminder",
+     "secs": 7.2
+    },
+    {
+     "q": "move my dune note to movies",
+     "ok": false,
+     "why": "used search_notes, expected ['move_note']",
+     "tool": "search_notes",
+     "secs": 5.0
+    },
+    {
+     "q": "put the invoice note in Work",
+     "ok": false,
+     "why": "used search_notes, expected ['move_note']",
+     "tool": "search_notes",
+     "secs": 4.6
+    },
+    {
+     "q": "hi! how are you?",
+     "ok": true,
+     "why": "",
+     "tool": null,
+     "secs": 4.5
+    },
+    {
+     "q": "thanks, that's all for now",
+     "ok": true,
+     "why": "",
+     "tool": null,
+     "secs": 5.2
+    }
+   ],
+   "vision": [
+    {
+     "image": "f29010636b5c39c6.png",
+     "ok": true,
+     "ocr_similarity": 1.0,
+     "described": true,
+     "why": "",
+     "secs": 24.1
+    },
+    {
+     "image": "ef7ee786451afd01.png",
+     "ok": true,
+     "ocr_similarity": 0.998,
+     "described": true,
+     "why": "",
+     "secs": 23.2
+    }
+   ]
+  }
+ },
+ "embedders": {
+  "nomic-embed-text": {
+   "filing_top1": 0.99,
+   "filing_top3": 1.0,
+   "same_p10": 0.668,
+   "diff_p99": 0.652,
+   "gap": 0.016,
+   "chat_recall1": 0.933,
+   "chat_recall5": 1.0,
+   "vram_gb": 0.32,
+   "secs": 4
+  },
+  "qwen3-embedding:0.6b": {
+   "filing_top1": 0.99,
+   "filing_top3": 1.0,
+   "same_p10": 0.708,
+   "diff_p99": 0.692,
+   "gap": 0.016,
+   "chat_recall1": 1.0,
+   "chat_recall5": 1.0,
+   "vram_gb": 2.37,
+   "secs": 15
+  },
+  "embeddinggemma": {
+   "filing_top1": 0.99,
+   "filing_top3": 1.0,
+   "same_p10": 0.611,
+   "diff_p99": 0.585,
+   "gap": 0.026,
+   "chat_recall1": 0.933,
+   "chat_recall5": 1.0,
+   "vram_gb": 0.68,
+   "secs": 7
+  }
+ }
+}

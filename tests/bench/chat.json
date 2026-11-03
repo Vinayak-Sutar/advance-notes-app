@@ -1,0 +1,41 @@
+{
+  "notes": [
+    {"title": "Interstellar", "topic": "Movies", "body": "Watch with Sam on Saturday. Christopher Nolan, 2h 49m."},
+    {"title": "Dune: Part Two", "topic": "Movies", "body": "Rewatch part one first. Directed by Denis Villeneuve."},
+    {"title": "Send invoice to Brightside", "topic": "Work", "body": "Hours from the kickoff week. Attach the signed estimate.", "due": "2026-10-27T10:00:00"},
+    {"title": "Renew the domain", "topic": "Work", "body": "notesapp.dev runs out soon. Renew it for two years with the company card.", "due": "2026-11-01T09:00:00"},
+    {"title": "Goa trip", "topic": "Travel", "body": "Flights on 12 Dec. Hotel: Taj Holiday Village, 4 nights. Need to buy sunscreen."},
+    {"title": "Groceries", "topic": null, "body": "- milk\n- eggs\n- bread"},
+    {"title": "Mom's birthday", "topic": "Family", "body": "Order the blue scarf she liked.", "due": "2026-11-15T09:00:00"},
+    {"title": "Gym plan", "topic": "Health", "body": "Pushups 3x10 and squats 3x15 on Monday, Wednesday and Friday."},
+    {"title": "Reading list", "topic": "Reading", "body": "Atomic Habits, Deep Work, Project Hail Mary."},
+    {"title": "Office wifi", "topic": "Work", "body": "Network is Orbit-5G. Ask Raj for the password."},
+    {"title": "Car service", "topic": null, "body": "Next service due at 45,000 km. Last one was done at Pune Motors."},
+    {"title": "Sam's address", "topic": "Family", "body": "Flat 12, Lake View Apartments, Baner, Pune."}
+  ],
+  "questions": [
+    {"q": "which movies did I want to watch?", "all": ["interstellar", "dune"], "note": "Interstellar"},
+    {"q": "when is the invoice due?", "any": ["27"], "note": "Send invoice to Brightside"},
+    {"q": "what should I attach to the invoice?", "any": ["estimate"], "note": "Send invoice to Brightside"},
+    {"q": "how many nights is the Goa hotel?", "any": ["4", "four"], "note": "Goa trip"},
+    {"q": "what do I need to buy for the Goa trip?", "any": ["sunscreen"], "note": "Goa trip"},
+    {"q": "what's on my grocery list?", "all": ["milk", "eggs", "bread"], "note": "Groceries"},
+    {"q": "what gift am I getting mom?", "any": ["scarf"], "note": "Mom's birthday"},
+    {"q": "which days do I go to the gym?", "all": ["monday", "wednesday", "friday"], "note": "Gym plan"},
+    {"q": "who has the office wifi password?", "any": ["raj"], "note": "Office wifi"},
+    {"q": "where does Sam live?", "any": ["lake view", "baner"], "note": "Sam's address"},
+    {"q": "when is the car service due?", "any": ["45,000", "45000", "45 000"], "note": "Car service"},
+    {"q": "what books are on my reading list?", "all": ["atomic habits", "deep work"], "note": "Reading list"},
+    {"q": "who am I watching Interstellar with?", "any": ["sam"], "note": "Interstellar"},
+    {"q": "how long should I renew the domain for?", "any": ["two years", "2 years", "2-year", "two-year"], "note": "Renew the domain"},
+    {"q": "who directed the Dune movie I saved?", "any": ["villeneuve"], "note": "Dune: Part Two"},
+    {"q": "what's my passport number?", "no_answer": true},
+    {"q": "when is my dentist appointment?", "no_answer": true},
+    {"q": "what's Raj's phone number?", "no_answer": true},
+    {"q": "which restaurant did I book for Friday?", "no_answer": true},
+    {"q": "how much did the Goa flights cost?", "no_answer": true},
+    {"q": "what is Priya's email address?", "no_answer": true},
+    {"q": "what did the doctor say last week?", "no_answer": true},
+    {"q": "what's my car's registration number?", "no_answer": true}
+  ]
+}

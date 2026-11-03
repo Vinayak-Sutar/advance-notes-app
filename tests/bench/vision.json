@@ -1,0 +1,8 @@
+[
+  {"image": "samples/demo-vault/.mnemo/media/f29010636b5c39c6.png",
+   "describe_any": ["deploy", "fail", "error", "postgres"],
+   "text": "Deployment failed\nBuild #4821 on production\nERROR: connection refused on port 5432\npsycopg2.OperationalError: could not connect\nto server at 10.0.4.17\nRetry deployment\nRollback to #4820\nDuration: 3m 42s\nTriggered by: vinayak"},
+  {"image": "samples/demo-vault/.mnemo/media/ef7ee786451afd01.png",
+   "describe_any": ["text", "chunk", "rerank", "retrieval", "document"],
+   "text": "The chunk overlap of 200 tokens outperformed 50 by a wide margin on recall, though it increased index size by roughly 18 percent. Reranking with a cross-encoder added 240ms of latency per query. Meeting with Priya on 14 November to review the retrieval budget"}
+]

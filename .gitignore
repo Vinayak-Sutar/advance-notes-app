@@ -1,0 +1,25 @@
+# The bundled runtime and model weights: ~5 GB, fetched by `python -m mnemo.setup`
+# on any machine. Keeping them out of git is what lets the repo stay portable
+# without being enormous.
+vendor/
+
+# The user's notes. The vault is data, not source.
+vault/
+profiles/
+backups/
+*.db
+*.db-wal
+*.db-shm
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+build/
+dist/
+*.egg-info/
+
+.DS_Store
+Thumbs.db

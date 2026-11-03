@@ -1,0 +1,18 @@
+[
+  {"q": "what is 1847 times 23?", "tool": ["calculator"], "args_any": ["1847"]},
+  {"q": "how much is 15% of 2400?", "tool": ["calculator"], "args_any": ["2400", "0.15", "15"]},
+  {"q": "what did I save about the Goa trip?", "tool": ["search_notes"], "args_any": ["goa"]},
+  {"q": "find my notes about the invoice", "tool": ["search_notes"], "args_any": ["invoice"]},
+  {"q": "do I have anything about my mom's birthday?", "tool": ["search_notes"], "args_any": ["mom", "birthday"]},
+  {"q": "what's in my grocery list?", "tool": ["search_notes"], "args_any": ["grocer"]},
+  {"q": "who won the 2026 Formula 1 world championship?", "tool": ["web_search"], "args_any": ["2026", "formula", "f1"]},
+  {"q": "what's the latest version of Python?", "tool": ["web_search"], "args_any": ["python"]},
+  {"q": "what's the weather in Pune today?", "tool": ["web_search"], "args_any": ["pune"]},
+  {"q": "who is the current CEO of Microsoft?", "tool": ["web_search"], "args_any": ["microsoft"]},
+  {"q": "remind me to call the bank tomorrow at 10am", "tool": ["create_reminder"], "args_any": ["tomorrow", "10"]},
+  {"q": "set a reminder to pay rent on the 1st", "tool": ["create_reminder"], "args_any": ["rent"]},
+  {"q": "move my dune note to movies", "tool": ["move_note"], "args_any": ["movies"]},
+  {"q": "put the invoice note in Work", "tool": ["move_note"], "args_any": ["work"]},
+  {"q": "hi! how are you?", "tool": [null]},
+  {"q": "thanks, that's all for now", "tool": [null]}
+]

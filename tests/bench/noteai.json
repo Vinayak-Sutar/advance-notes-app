@@ -1,0 +1,33 @@
+[
+  {"title": "Bedroom", "body": "Paint ideas for the bedroom\n\n- warm\n- calm", "request": "what is 23 x 17?", "expect": ["answer"], "reply_has": ["391"]},
+  {"title": "Bedroom", "body": "Paint ideas for the bedroom\n\n- warm\n- calm", "request": "what is 15% of 240?", "expect": ["answer"], "reply_has": ["36"]},
+  {"title": "Groceries", "body": "Groceries\n- milk\n- eggs\n- bread", "request": "how many items are on this list?", "expect": ["answer"], "reply_any": ["3", "three"]},
+  {"title": "Goa trip", "body": "Trip to Goa\nFlights on 12 Dec, hotel Taj Holiday Village, 4 nights", "request": "how many nights is the hotel?", "expect": ["answer"], "reply_any": ["4", "four"]},
+  {"title": "Meeting", "body": "Meeting notes\nDecided to launch on 3 March. Priya owns marketing.", "request": "who owns marketing?", "expect": ["answer"], "reply_has": ["priya"]},
+  {"title": "Meeting", "body": "Meeting notes\nDecided to launch on 3 March. Priya owns marketing.", "request": "when are we launching?", "expect": ["answer"], "reply_has": ["march"]},
+  {"title": "Bedroom", "body": "Paint ideas for the bedroom", "request": "what is the capital of France?", "expect": ["answer"], "reply_has": ["paris"]},
+  {"title": "Workout", "body": "Workout plan\n- pushups 3x10\n- squats 3x15", "request": "is this a good plan for a beginner?", "expect": ["answer"]},
+  {"title": "Books", "body": "Book list\n- Dune\n- Atomic Habits", "request": "who wrote atomic habits?", "expect": ["answer"], "reply_has": ["clear"]},
+  {"title": "Untitled", "body": "", "request": "what can you do in this note?", "expect": ["answer"]},
+
+  {"title": "Bedroom", "body": "Paint ideas for the bedroom\n\n- warm\n- calm", "request": "write name of colors here", "expect": ["add"], "text_any": ["red", "blue", "green", "beige", "cream", "grey", "gray", "white", "yellow", "pink", "teal", "lavender"]},
+  {"title": "Groceries", "body": "Groceries\n- milk", "request": "add eggs and bread to the list", "expect": ["add", "replace"], "text_has": ["eggs", "bread"]},
+  {"title": "Goa trip", "body": "Trip to Goa", "request": "add a packing list", "expect": ["add"], "text_has": ["-"]},
+  {"title": "Workout", "body": "Workout plan", "request": "write a 3 day beginner routine below", "expect": ["add"], "text_has": ["day"]},
+  {"title": "Recipes", "body": "Recipes", "request": "add the steps to make masala chai", "expect": ["add"], "text_any": ["boil", "tea", "milk"]},
+  {"title": "Untitled", "body": "", "request": "write the days of the week", "expect": ["add"], "text_has": ["monday", "sunday"]},
+  {"title": "Bedroom", "body": "Bedroom paint\n- warm", "request": "put a heading called Budget at the top", "expect": ["add", "replace"], "text_has": ["budget"]},
+  {"title": "Meeting", "body": "Meeting notes\nDecided to launch on 3 March.", "request": "note down that Raj will handle the demo", "expect": ["add"], "text_has": ["raj"]},
+  {"title": "Ideas", "body": "Ideas", "request": "list 5 names for a cat cafe here", "expect": ["add"], "text_has": ["-"]},
+  {"title": "Study", "body": "Study plan", "request": "add a checklist for exam prep", "expect": ["add"], "text_has": ["[ ]"]},
+
+  {"title": "Groceries", "body": "Groceries\nmilk\neggs\nbread", "request": "make this a checklist", "expect": ["replace"], "text_has": ["[ ]"], "keep_lines": true},
+  {"title": "Draft", "body": "teh meeting is on monday and we will dicuss the budjet", "request": "fix the spelling", "expect": ["replace"], "text_has": ["the meeting", "discuss", "budget"]},
+  {"title": "Fruit", "body": "- banana\n- apple\n- cherry", "request": "sort the list alphabetically", "expect": ["replace"], "text_order": ["apple", "banana", "cherry"], "keep_lines": true},
+  {"title": "Bedroom", "body": "Paint ideas\n- warm\n- calm\n- bright", "request": "remove bright from the list", "expect": ["replace"], "text_not": ["bright"]},
+  {"title": "Trip", "body": "Trip notes\nflight at 6\nhotel booked", "request": "turn this into bullet points", "expect": ["replace"], "text_any": ["- ", "* ", "• "], "keep_lines": true},
+  {"title": "Meeting", "body": "Meeting: launch march. owner priya. budget 5 lakh.", "request": "rewrite this more clearly", "expect": ["replace"], "text_has": ["priya", "march"]},
+  {"title": "Ideas", "body": "Ideas\n- app for notes\n- cat cafe", "request": "make the list items bold", "expect": ["replace"], "text_has": ["**"]},
+  {"title": "Todo", "body": "Todo\n- [ ] call bank\n- [ ] pay rent", "request": "mark call bank as done", "expect": ["replace"], "text_has": ["[x] call bank", "[ ] pay rent"]},
+  {"title": "Move", "body": "Plan to move to Pune for the new job in January and find a flat near Hinjewadi, maybe share with Rohit, budget around 25k a month", "request": "summarise this", "expect": ["answer", "replace", "add"]}
+]
