@@ -259,12 +259,23 @@ TASK_PATTERNS = [
     r"\bmake\s+sure\s+(?:i|to)\b",
 ]
 
-RECUR_PATTERNS = {
-    r"\bevery\s+day\b|\bdaily\b": "daily",
-    r"\bevery\s+week\b|\bweekly\b": "weekly",
-    r"\bevery\s+month\b|\bmonthly\b": "monthly",
-    r"\bevery\s+(" + "|".join(WEEKDAYS) + r")\b": "weekly",
-}
+# Most specific first. A label of None means "every N <unit>s", read from the
+# match. "every monday" loses only its "every": the day itself is the date.
+RECUR_PATTERNS = [
+    (r"\bevery\s+(?:other|second)\s+day\b", "every 2 days"),
+    (r"\bevery\s+(?:other|second)\s+week\b|\bfortnightly\b", "every 2 weeks"),
+    (r"\bevery\s+(?:other|second)\s+month\b", "every 2 months"),
+    (r"\bevery\s+(\d{1,2})\s+(day|week|month|year)s?\b", None),
+    (r"\bevery\s+week\s*days?\b|\b(?:on\s+)?weekdays\b", "weekdays"),
+    (r"\bevery\s*day\b|\bdaily\b", "daily"),
+    (r"\bevery\s+week\b|\bweekly\b", "weekly"),
+    (r"\bevery\s+month\b|\bmonthly\b", "monthly"),
+    (r"\bevery\s+year\b|\byearly\b|\bannually\b", "yearly"),
+    (r"\bevery\s+(?=(?:" + "|".join(WEEKDAYS) + r")\b)", "weekly"),
+]
+# "on the 1st", "the 15th": a day of the month, for things that repeat monthly.
+DAY_OF_MONTH = re.compile(r"\b(?:on\s+)?the\s+(\d{1,2})(?:st|nd|rd|th)?\b|\bon\s+(\d{1,2})(?:st|nd|rd|th)\b",
+                          re.IGNORECASE)
 
 URL_RE = re.compile(r"https?://\S+")
 SYMBOL_TOPIC = re.compile(r'(?:^|\s)@(?:"([^"]+)"|([A-Za-z0-9][\w/-]*))')
@@ -440,12 +451,6 @@ def parse(raw: str, now: datetime | None = None) -> Intent:
                 intent.matched.append("phrase:task")
                 break
 
-    for pattern, label in RECUR_PATTERNS.items():
-        if re.search(pattern, text, re.IGNORECASE):
-            intent.recurrence = label
-            intent.matched.append(f"recur:{label}")
-            break
-
     # -- time --
     # A bare "morning" or "tonight" inside ordinary prose is not a schedule
     # request. Vague times only count when something else already signalled
@@ -456,6 +461,22 @@ def parse(raw: str, now: datetime | None = None) -> Intent:
         r"four|five|ten)\s|\d{1,2}\s*(?:am|pm)|\d{1,2}:\d{2}|"
         + "|".join(WEEKDAYS) + r"|" + "|".join(MONTHS) + r")\b", text, re.I))
 
+    # A repeat means something only for a reminder, a to-do or a timed thing;
+    # in ordinary writing ("I talk to her every day") the words stay put.
+    if wants_time or explicit_date:
+        for pattern, label in RECUR_PATTERNS:
+            m = re.search(pattern, text, re.IGNORECASE)
+            if m:
+                if label is None:
+                    n, unit = int(m.group(1)), m.group(2).lower()
+                    label = ({"day": "daily", "week": "weekly", "month": "monthly",
+                              "year": "yearly"}[unit] if n == 1 else f"every {n} {unit}s")
+                intent.recurrence = label
+                intent.matched.append(f"recur:{label}")
+                # The repeat words aren't part of what the thing is called.
+                text = re.sub(r"\s{2,}", " ", text[:m.start()] + " " + text[m.end():]).strip()
+                break
+
     if wants_time or explicit_date:
         when, text = parse_when(text, now, allow_dayparts=wants_time)
         if when:
@@ -464,6 +485,18 @@ def parse(raw: str, now: datetime | None = None) -> Intent:
             if intent.kind == "note" and not intent.append_item:
                 # An explicit future time on a note still means "surface it then".
                 intent.kind = "task"
+
+    if intent.recurrence and "month" in intent.recurrence:
+        m = DAY_OF_MONTH.search(text)
+        if m and 1 <= int(m.group(1) or m.group(2)) <= 31:
+            base = now or datetime.now()
+            hour, minute = ((intent.due_at.hour, intent.due_at.minute) if intent.due_at else (9, 0))
+            intent.due_at = _next_day_of_month(int(m.group(1) or m.group(2)), base, hour, minute)
+            text = (text[:m.start()] + " " + text[m.end():]).strip()
+            if "time" not in intent.matched:
+                intent.matched.append("time")
+    if intent.recurrence == "weekdays" and intent.due_at and intent.due_at.weekday() >= 5:
+        intent.due_at += timedelta(days=7 - intent.due_at.weekday())      # on to Monday
 
     # -- links --
     urls = URL_RE.findall(text)
@@ -479,6 +512,19 @@ def parse(raw: str, now: datetime | None = None) -> Intent:
     text = re.sub(r"^\s*every\s+(?=\w)", "", text, flags=re.IGNORECASE)
     intent.text = re.sub(r"\s{2,}", " ", text).strip(" ,.:;-") or raw.strip()
     return intent
+
+
+def _next_day_of_month(day: int, now: datetime, hour: int, minute: int) -> datetime:
+    """The next date with that day of the month, this month if it's still ahead.
+    Short months use their last day."""
+    year, month = now.year, now.month
+    for _ in range(2):
+        last = calendar.monthrange(year, month)[1]
+        when = datetime(year, month, min(day, last), hour, minute)
+        if when > now:
+            return when
+        year, month = (year + 1, 1) if month == 12 else (year, month + 1)
+    return when
 
 
 def describe_when(when: datetime | None, now: datetime | None = None) -> str:

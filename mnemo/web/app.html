@@ -1016,6 +1016,11 @@ a.src-chip{text-decoration:none;color:inherit;max-width:240px}
 .note-links .p-tiles{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));margin-top:10px}
 
 /* To-do lists */
+.list-row.child{margin-left:calc(var(--depth, 1) * 20px)}
+.list-row .row-kids{margin-left:8px;font-size:12px;font-weight:500;color:var(--muted)}
+.group-box{margin:4px 0 18px}
+.group-box .rows{display:flex;flex-direction:column;gap:2px;margin:8px 0}
+.rep{display:inline-flex;align-items:center;color:var(--muted)}
 .list-box{margin:4px 0 14px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface-2)}
 .lb-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .lb-prog,.list-prog{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600}
@@ -1503,7 +1508,7 @@ function itemChips(t) {
   const out = [];
   if (t.remind) { const d = new Date(t.remind); out.push(`<span class="ichip${d < new Date() ? ' over' : ''}" title="Reminder">${icon('bell', 11)}${esc(fmtAbs(d))}</span>`); }
   if (t.due) out.push(`<span class="ichip${localDay(t.due) < sod(new Date()) ? ' over' : ''}" title="Date">${icon('clock', 11)}${esc(dayLabel(localDay(t.due)))}</span>`);
-  if (t.repeat) out.push(`<span class="ichip" title="Repeats">${icon('refresh', 11)}${esc(t.repeat)}</span>`);
+  if (t.repeat) out.push(`<span class="ichip" title="Repeats">${icon('refresh', 11)}${esc(repeatLabel(t.repeat))}</span>`);
   return out.join('');
 }
 // Done and to-do items under a heading, until the next heading at its level or above.
@@ -1766,6 +1771,8 @@ function interpret(raw) {
   t = t.replace(/\s+/g, ' ').replace(/^\s*(?:please\s+)?remind me(?:\s+to)?\b/i, '')
     .replace(/^\s*(?:to|that|about)\s+/i, '').replace(/\s+(?:at|on|by|to|in)\s*$/i, '')
     .replace(/^[\s,.;:–-]+|[\s,.;:–-]+$/g, '').replace(/\s+([,.!?])/g, '$1').trim();
+  // A timed thing's repeat words aren't part of what it's called (as in mnemo/intent.py).
+  if (r.due && repeatIn(low)) t = t.replace(/\bevery\s+(?:other|second|\d{1,2})\s+\w+?s?\b|\bevery\s+week\s*days?\b|\b(?:on\s+)?weekdays\b|\bevery\s*day\b|\bdaily\b|\bevery\s+(?:week|month|year)\b|\b(?:weekly|monthly|yearly|fortnightly|annually)\b|\bevery\b/gi, ' ').replace(/\s+/g, ' ').trim();
   r.title = cap(t);
   return r;
 }
@@ -3103,7 +3110,7 @@ function todayRowHTML(n, group) {
     <button class="row-open" data-act="open" data-id="${esc(n.id)}" ${sel ? 'aria-current="true"' : ''}>
       <span class="row-body">
         <span class="row-title">${esc(n.title || 'Untitled')}</span>
-        <span class="row-sub"><span class="row-due ${group === 'overdue' ? 'is-over' : ''}">${icon(n.remind ? 'bell' : 'clock', 12)}${esc(t)}</span>${n.topic ? `<span class="coll-mini"><span class="dot"></span>${esc(topicName(n.topic))}</span>` : ''}</span>
+        <span class="row-sub"><span class="row-due ${group === 'overdue' ? 'is-over' : ''}">${icon(n.remind ? 'bell' : 'clock', 12)}${esc(t)}</span>${n.repeat ? `<span class="rep" title="Repeats ${esc(repeatLabel(n.repeat).toLowerCase())}">${icon('refresh', 12)}</span>` : ''}${n.topic ? `<span class="coll-mini"><span class="dot"></span>${esc(topicName(n.topic))}</span>` : ''}</span>
       </span>
     </button>
     ${n.done ? '<span></span>' : `<button class="icon-btn sm snooze-btn" data-act="snooze" data-id="${esc(n.id)}" aria-label="Snooze ${esc(n.title)}" title="Snooze (s)">${icon('snooze', 15)}</button>`}
@@ -3210,7 +3217,7 @@ function renderList() {
       if (hadFocus) focusRow(focusId);
       return;
     }
-    body = S.list.map(listRowHTML).join('') || empty;
+    body = listTree(S.list).map(([l, depth]) => listRowHTML(l, depth)).join('') || empty;
   } else {
     const isTopic = v.type === 'topic';
     const node = isTopic ? flatTopics(S.state?.tree).find((n) => n.path === v.path) : null;
@@ -3234,17 +3241,52 @@ function renderList() {
   if (hadFocus) focusRow(focusId);
 }
 
+/* ---------- Repeats and groups ---------- */
+const REPEATS = [['daily', 'Every day'], ['weekdays', 'Every weekday'], ['weekly', 'Every week'], ['every 2 weeks', 'Every 2 weeks'], ['monthly', 'Every month']];
+function repeatLabel(r) {
+  const known = REPEATS.find(([v]) => v === r);
+  return known ? known[1] : r ? cap(String(r)) : '';
+}
+function repeatItems(current, noneLabel = "Doesn't repeat") {
+  return [...REPEATS.map(([v, label]) => ({ label, value: 'rep:' + v, icon: 'refresh', hint: current === v ? 'In use' : '' })),
+    ...(current ? [{ sep: true }, { label: noneLabel, value: 'rep:', icon: 'x' }] : [])];
+}
+// The capture box shows a repeat before it's saved (mnemo/intent.py has the full rules).
+function repeatIn(low) {
+  const m = low.match(/\bevery\s+(?:other|second)\s+(day|week|month)\b|\bfortnightly\b|\bevery\s+(\d{1,2})\s+(day|week|month)s?\b|\bevery\s+week\s*days?\b|\bweekdays\b|\bevery\s*day\b|\bdaily\b|\bevery\s+week\b|\bweekly\b|\bevery\s+month\b|\bmonthly\b|\bevery\s+year\b|\byearly\b|\bevery\s+(?:mon|tues|wednes|thurs|fri|satur|sun)day\b/);
+  if (!m) return null;
+  const w = m[0];
+  if (m[1] || /fortnightly/.test(w)) return `every 2 ${m[1] || 'week'}s`;
+  if (m[2]) return +m[2] === 1 ? { day: 'daily', week: 'weekly', month: 'monthly' }[m[3]] : `every ${m[2]} ${m[3]}s`;
+  if (/week\s*day/.test(w)) return 'weekdays';
+  if (/day|daily/.test(w) && !/(mon|tues|wednes|thurs|fri|satur|sun)day/.test(w)) return 'daily';
+  if (/month/.test(w)) return 'monthly';
+  if (/year/.test(w)) return 'yearly';
+  return 'weekly';
+}
+// Lists nested under the list they're grouped in, at any depth.
+function listTree(lists) {
+  const ids = new Set(lists.map((l) => l.id)), out = [], seen = new Set();
+  const walk = (l, depth) => {
+    if (seen.has(l.id)) return; seen.add(l.id); out.push([l, depth]);
+    lists.filter((k) => k.list && k.list.parent === l.id).forEach((k) => walk(k, depth + 1));
+  };
+  lists.filter((l) => !l.list || !l.list.parent || !ids.has(l.list.parent)).forEach((l) => walk(l, 0));
+  return out;
+}
+
 /* ---------- To-do lists ---------- */
-function listRowHTML(n) {
+function listRowHTML(n, depth = 0) {
   const l = n.list || {}, sel = S.sel === n.id, p = l.pace || listPace(l.done || 0, l.total || 0, n.due, n.created);
   const pct = l.total ? Math.round((100 * l.done) / l.total) : 0;
   const due = n.due ? `<span class="row-due${new Date(n.due) < sod(new Date()) && p.state !== 'done' ? ' over' : ''}">${esc(daysLeftWords(n.due))}</span>` : '';
-  return `<div class="row list-row ${sw(n.topic)} ${sel ? 'is-sel' : ''} ${p.state === 'done' ? 'is-done' : ''}" data-row="${esc(n.id)}" role="listitem">
+  const kids = (l.children || []).length;
+  return `<div class="row list-row ${depth ? 'child' : ''} ${sw(n.topic)} ${sel ? 'is-sel' : ''} ${p.state === 'done' ? 'is-done' : ''}" data-row="${esc(n.id)}" role="listitem"${depth ? ` style="--depth:${depth}"` : ''}>
     <button class="row-open" data-act="open" data-id="${esc(n.id)}" ${sel ? 'aria-current="true"' : ''}>
       <span class="row-edge" aria-hidden="true"></span>
       <span class="row-kind">${icon('task', 16)}</span>
       <span class="row-body">
-        <span class="row-top"><span class="row-title">${esc(n.title || 'Untitled')}</span>${due}</span>
+        <span class="row-top"><span class="row-title">${esc(n.title || 'Untitled')}</span>${kids ? `<span class="row-kids">${kids} list${kids === 1 ? '' : 's'}</span>` : ''}${due}</span>
         <span class="list-prog"><span class="bar"><span style="width:${pct}%"></span></span><span>${l.total ? `${l.done} of ${l.total}` : 'Empty'}</span></span>
         <span class="row-snip"><span class="txt">${paceHTML(p, l.next)}</span></span>
       </span>
@@ -3268,8 +3310,12 @@ function renderListBox() {
   const ci = paused ? `${icon('snooze', 13)}<span class="lbl">Paused until ${esc(dayLabel(localDay(l.quietUntil)))}</span>`
     : l.checkin ? `${icon('bell', 13)}<span class="lbl">Checks in daily · ${esc(fmtTime(at(new Date(), ...hm(l.checkin))))}</span>` : `${icon('bell', 13)}Daily check-in: off`;
   const checkin = `<button class="chip ${l.checkin && !paused ? 'accent' : 'quiet'}" data-act="list-checkin" title="Daily check-in">${ci}${icon('chev-down', 12)}</button>`;
-  box.innerHTML = `<div class="lb-row">${chip}${checkin}</div>
+  const repeat = `<button class="chip ${l.repeat ? 'accent' : 'quiet'}" data-act="list-repeat" title="Start over, unticked">${icon('refresh', 13)}<span class="lbl">${l.repeat ? `Starts over ${esc(repeatLabel(l.repeat).toLowerCase())}` : "Doesn't start over"}</span>${icon('chev-down', 12)}</button>`;
+  const group = `<button class="chip quiet" data-act="list-group" title="Group">${icon('folder', 13)}<span class="lbl">${n.parentTitle ? `In ${esc(n.parentTitle)}` : 'Put in a group'}</span>${icon('chev-down', 12)}</button>`;
+  const kids = (n.childLists || []).length;
+  box.innerHTML = `<div class="lb-row">${chip}${checkin}${repeat}${group}</div>
     ${total ? `<div class="lb-prog"><span class="bar"><span style="width:${Math.round((100 * done) / total)}%"></span></span><span>${done} of ${total} done</span></div>` : ''}
+    ${kids ? `<p class="lb-pace">With its ${kids} list${kids === 1 ? '' : 's'}: <b>${l.done} of ${l.total}</b> done across the group.</p>` : ''}
     <p class="lb-pace">${paceHTML(p, next ? stripTokens(next[3] || '') : '')}${move}</p>`;
   Ed.el?.classList.toggle('fold-done', !S.showDone);
   $('#listFoot').innerHTML = `<button class="btn sm outline" data-act="add-item">${icon('plus', 14)}Add an item</button>
@@ -3575,6 +3621,7 @@ function noteHTML(n) {
       <span class="chip quiet">${icon(k.icon, 13)}${k.label}</span>
       ${n.kind === 'list' ? '' : n.due ? `<button class="chip ${over ? 'over' : 'accent'}" data-act="due" data-id="${esc(n.id)}" title="Change the time">${icon(n.remind ? 'bell' : 'clock', 13)}<span class="lbl">${esc(fmtAbs(n.due))}</span></button>`
         : `<button class="chip quiet" data-act="due" data-id="${esc(n.id)}">${icon('bell', 13)}Remind me</button>`}
+      ${n.kind !== 'list' && n.due ? `<button class="chip ${n.repeat ? 'accent' : 'quiet'}" data-act="note-repeat" data-id="${esc(n.id)}" title="Repeat">${icon('refresh', 13)}<span class="lbl">${esc(n.repeat ? repeatLabel(n.repeat) : 'Repeat')}</span></button>` : ''}
       ${isTask ? (n.done ? `<button class="chip ok" data-act="done" data-id="${esc(n.id)}" data-v="0" title="Mark not done">${icon('check', 13)}Done</button>` : `<button class="btn sm outline" data-act="done" data-id="${esc(n.id)}" data-v="1">${icon('check', 14)}Mark done</button>`) : ''}
       ${unfiled ? `<button class="btn sm tinted" data-act="file-it" data-id="${esc(n.id)}">${icon('sparkle', 14)}File it for me</button>` : ''}
       ${n.kind !== 'list' && n.progress && n.progress[1] >= 2 ? `<button class="chip quiet" data-act="make-list" data-id="${esc(n.id)}">${icon('task', 13)}Make this a to-do list</button>` : ''}
@@ -3584,6 +3631,9 @@ function noteHTML(n) {
     ${(n.kind === 'image' || n.source) ? '<div class="body-label" id="bodyLabel">Your notes</div>' : ''}
     <div class="md-body" id="mdBody" tabindex="0" role="group" aria-label="Note body. Press Enter to edit."></div>
     ${n.kind === 'list' ? '<div class="list-foot" id="listFoot"></div>' : ''}
+    ${(n.childLists || []).length ? `<section class="group-box" aria-labelledby="glTitle"><div class="connects-head">${icon('task', 17)}<h3 id="glTitle">Lists in this group</h3><span class="badge">${n.childLists.length}</span></div>
+      <div class="rows" role="list">${n.childLists.map((c) => listRowHTML(c)).join('')}</div>
+      <button class="btn sm outline" data-act="new-sublist" data-id="${esc(n.id)}">${icon('plus', 14)}New list in this group</button></section>` : ''}
     ${(n.links || []).length ? `<section class="note-links" aria-labelledby="nlTitle"><div class="connects-head">${icon('link', 17)}<h3 id="nlTitle">Links in this note</h3><span class="badge">${n.links.length}</span></div><div class="p-tiles">${n.links.map((l) => lTileHTML(l, { compact: true })).join('')}</div></section>` : ''}
     <section class="connects" aria-labelledby="connTitle">
       <div class="connects-head">${icon('graph', 17)}<h3 id="connTitle">Connects to</h3>${rel.length ? `<span class="badge">${rel.length}</span>` : ''}</div>
@@ -4061,6 +4111,7 @@ function renderChips(it, searching) {
   if (it.append) chips.push(`<span class="chip ${sw(null)}">${icon('plus', 13)}Add to “${esc(it.appendTarget)}”</span>`);
   else if (it.topic) chips.push(`<span class="chip ${sw(it.topic)}">${icon('arrow', 13)}<span class="dot" aria-hidden="true"></span>${esc(topicLabel(it.topic))}</span>`);
   if (it.todo && !it.append) chips.push(`<span class="chip quiet">${icon('task', 13)}To-do</span>`);
+  if (it.due && repeatIn(it.text.toLowerCase())) chips.push(`<span class="chip quiet">${icon('refresh', 13)}${esc(repeatLabel(repeatIn(it.text.toLowerCase())))}</span>`);
   if (it.link) chips.push(`<span class="chip quiet">${icon('link', 13)}${esc(domainOf(it.link))}</span>`);
   if (!chips.length || (!it.topic && !it.append)) chips.push(`<span class="cap-hint">${it.title && it.title !== v ? `“${esc(it.title.slice(0, 48))}${it.title.length > 48 ? '…' : ''}”, ` : ''}I'll file it for you</span>`);
   box.innerHTML = chips.join('');
@@ -4207,7 +4258,7 @@ function closeToast(id) { const el = document.getElementById(id); if (!el) retur
    Menus / pickers (collection picker, time picker, snooze)
    ===================================================================== */
 let menuClose = null;
-function openMenu(anchor, { title, items, filter }) {
+function openMenu(anchor, { title, items, filter, newLabel = 'New collection' }) {
   if (menuClose) menuClose();
   return new Promise((resolve) => {
     const m = document.createElement('div');
@@ -4248,7 +4299,7 @@ function openMenu(anchor, { title, items, filter }) {
       if (!e.target.classList.contains('menu-filter')) return;
       const q = e.target.value.trim().toLowerCase(); m._q = e.target.value;
       shown = items.filter((it) => !it.sep && !it.heading && it.label && it.label.toLowerCase().includes(q));
-      if (q && !items.some((it) => it.label && it.label.toLowerCase() === q)) shown.push({ label: `New collection “${cap(e.target.value.trim())}”`, value: cap(e.target.value.trim()), icon: 'plus' });
+      if (q && !items.some((it) => it.label && it.label.toLowerCase() === q)) shown.push({ label: `${newLabel} “${cap(e.target.value.trim())}”`, value: cap(e.target.value.trim()), icon: 'plus' });
       draw(); const f = $('.menu-filter', m); f.focus(); f.setSelectionRange(f.value.length, f.value.length);
     };
     const onDoc = (e) => { if (!m.contains(e.target)) done(undefined); };
@@ -4295,6 +4346,7 @@ async function pollDue() {
   try {
     const d = await api.due();
     const list = d.reminders || (d.notes || []).map((n) => ({ type: 'task', key: 'task:' + n.id, noteId: n.id, title: n.title, when: n.due, topic: n.topic }));
+    if (d.rolled) { softRefresh(); if (S.openNote && !Ed.dirty) renderDetail(); }
     const fresh = list.filter((r) => !S.shownAlerts.has(r.key));
     if (!fresh.length) return;
     fresh.forEach((r) => { S.shownAlerts.add(r.key); S.alertData.set(r.key, r); showAlert(r); osNotify(r); });
@@ -4519,8 +4571,9 @@ async function setDue(id, when, label, snooze = false) {
 }
 async function completeNote(id, done) {
   const idx = listIds().indexOf(id);
-  await busy(() => api.complete(id, done));
-  toast({ icon: 'check', sw: 'sw-mint', msg: done ? 'Done. <span class="t-sub">Nice one.</span>' : 'Marked as not done', actions: [{ label: 'Undo', act: 'undo' }] });
+  const r = await busy(() => api.complete(id, done));
+  const msg = r && r.next ? `Done. <span class="t-sub">Next: ${esc(fmtAbs(r.next))}</span>` : done ? 'Done. <span class="t-sub">Nice one.</span>' : 'Marked as not done';
+  toast({ icon: r && r.next ? 'refresh' : 'check', sw: 'sw-mint', msg, actions: [{ label: 'Undo', act: 'undo' }] });
   await afterChange({ nextFrom: idx });
 }
 async function fileTo(id, path) {
@@ -4543,6 +4596,45 @@ const ACTS = {
   'view-mode': (el) => setTiles(el.dataset.v === 'tiles'),
   'tile-check': (el) => tickTile(el),
   'new-list': () => newNote('list'),
+  'note-repeat': async (el) => {
+    const n = S.openNote; if (!n) return;
+    const v = await openMenu(el, { title: 'Repeat', items: repeatItems(n.repeat) }); if (!v) return;
+    const r = v.slice(4);
+    setListSetting(n.id, { repeat: r || null }, r ? `Repeats <b>${esc(repeatLabel(r).toLowerCase())}</b>` : "Doesn't repeat now");
+  },
+  'list-repeat': async (el) => {
+    const n = S.openNote; if (!n) return;
+    const cur = (n.list || {}).repeat;
+    const v = await openMenu(el, { title: 'Start over, unticked', items: repeatItems(cur, 'Never start over') }); if (!v) return;
+    const r = v.slice(4);
+    setListSetting(n.id, { repeat: r || null }, r ? `Starts over <b>${esc(repeatLabel(r).toLowerCase())}</b>` : "Won't start over now");
+  },
+  'list-group': async (el) => {
+    const n = S.openNote; if (!n) return;
+    let all = [];
+    try { all = (await api.lists()).lists; } catch { return; }
+    const parentOf = new Map(all.map((x) => [x.id, x.list && x.list.parent]));
+    const inside = (id) => { for (let p = id, k = 0; p && k < 50; p = parentOf.get(p), k++) if (p === n.id) return true; return false; };
+    const cur = (n.list || {}).parent;
+    const items = all.filter((x) => x.id !== n.id && !inside(x.id)).map((x) => ({ label: x.title || 'Untitled', value: 'id:' + x.id, icon: 'task', hint: x.id === cur ? 'In use' : '' }));
+    if (cur) items.push({ sep: true }, { label: 'Take it out of the group', value: 'none', icon: 'x' });
+    const v = await openMenu(el, { title: 'Put it in a group', items, filter: true, newLabel: 'New group' }); if (v === undefined) return;
+    if (v === 'none') return setListSetting(n.id, { parent: null }, 'Out of the group');
+    let parent = v.startsWith('id:') ? v.slice(3) : null, name = parent ? (all.find((x) => x.id === parent) || {}).title : v;
+    if (!parent) {
+      try { parent = (await busy(() => api.newNote(v, '', null, 'list'))).id; } catch { toast({ icon: 'x', msg: "Couldn't make that group just now.", sw: 'sw-tangerine' }); return; }
+    }
+    setListSetting(n.id, { parent }, `In the group <b>${esc(name || 'Untitled')}</b>`);
+  },
+  'new-sublist': async (el) => {
+    const parent = el.dataset.id;
+    await Ed.flush();
+    try {
+      const r = await busy(() => api.newNote('', '', null, 'list'));
+      await api.listSettings({ id: r.id, parent });
+      freshId = r.id; await refresh(); await openNote(r.id, { focusTitle: true });
+    } catch { toast({ icon: 'x', msg: "Couldn't make that list just now.", sw: 'sw-tangerine' }); }
+  },
   'list-due': async (el) => {
     const id = el.dataset.id, n = S.openNote && S.openNote.id === id ? S.openNote : S.list.find((x) => x.id === id);
     const v = await openMenu(el, { title: n && n.due ? 'Move the deadline' : 'Set a deadline', items: deadlineItems(!!(n && n.due)) });
@@ -4557,8 +4649,16 @@ const ACTS = {
   'item-when': async (el) => {
     const li = +el.dataset.li, m = (Ed.lines[li] || '').match(CHECK_LINE); if (!m) return;
     const [text, tok] = splitTokens(m[3] || '');
-    const v = await openMenu(el, { title: tok.remind ? 'Change the reminder' : 'Remind me about this', items: timeItems(!!tok.remind) });
+    const items = [...timeItems(!!tok.remind), { heading: 'Repeat' }, ...repeatItems(tok.repeat)];
+    const v = await openMenu(el, { title: tok.remind ? 'Change the reminder' : 'Remind me about this', items });
     if (v === undefined || !Ed.lines[li]?.match(CHECK_LINE)) return;
+    if (typeof v === 'string' && v.startsWith('rep:')) {
+      tok.repeat = v.slice(4) || null;
+      Ed.lines[li] = itemLine(m[1], m[2] !== ' ', text, tok);
+      Ed.changed(); Ed.render();
+      toast({ icon: 'refresh', msg: tok.repeat ? `Repeats <b>${esc(repeatLabel(tok.repeat).toLowerCase())}</b>` : "Doesn't repeat now" });
+      return;
+    }
     tok.remind = v === 'remove' ? null : toISO(v);
     Ed.lines[li] = itemLine(m[1], m[2] !== ' ', text, tok);
     Ed.changed(); Ed.render();

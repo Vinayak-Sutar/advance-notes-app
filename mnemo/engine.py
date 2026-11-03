@@ -10,6 +10,7 @@ import json
 import re
 import sqlite3
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 
 from . import gardener as Gd
@@ -367,6 +368,7 @@ class Engine:
             # The time lives in the file, so it survives edits and a rebuild.
             note.due = due_iso
             note.remind = due_iso if parsed.get("remind", True) else None
+            note.repeat = parsed.get("recurrence")
             if note.kind == "note":
                 note.kind = "task"
 
@@ -518,7 +520,8 @@ class Engine:
         if parsed.get("append_item") and parsed.get("append_to"):
             due = parsed.get("due_at")
             remind = due.strftime("%Y-%m-%dT%H:%M:%S") if due else None
-            target = self.add_to_named_list(parsed["append_to"], text, remind=remind)
+            target = self.add_to_named_list(parsed["append_to"], text, remind=remind,
+                                            repeat=parsed.get("recurrence"))
             row = N.get(self.conn, target)
             return CaptureResult(note=self.vault.read(row["path"]), path=row["path"],
                                  outcome=R.FILED, confidence=1.0, appended_to=target,
@@ -527,7 +530,8 @@ class Engine:
                                  matched=parsed.get("matched") or [])
         return None
 
-    def add_to_named_list(self, name: str, item: str, remind: str | None = None) -> str:
+    def add_to_named_list(self, name: str, item: str, remind: str | None = None,
+                          repeat: str | None = None) -> str:
         """Add an item to the list `name` names, making that list if there's
         none yet. Returns the list's id."""
         target = self.find_list(name)
@@ -535,7 +539,7 @@ class Engine:
             from .intent import list_title
             target = self.create_note(title=list_title(name), body="", kind="list")["id"]
         item = item.strip()
-        self.add_to_list(target, item[:1].upper() + item[1:], remind=remind)
+        self.add_to_list(target, item[:1].upper() + item[1:], remind=remind, repeat=repeat)
         return target
 
     def pause_list(self, name: str, until: str) -> str | None:
@@ -574,7 +578,15 @@ class Engine:
                     and "checkin" not in fields:
                 note.checkin = self.checkin_default      # a deadline checks in daily
             note.kind = note.kind or "note"
-        return self._rewrite(note_id, change, "list.settings")
+        note = self._rewrite(note_id, change, "list.settings")
+        if fields.get("repeat") and note.kind == "list":
+            # A list that starts repeating now begins its first round now, so
+            # what's already ticked this week stays ticked.
+            from . import reminders as Rem
+            rule = Rem.parse_rule(note.repeat)
+            if rule:
+                Rem.mark(self.conn, [Rem.reset_key(note_id, rule, datetime.now(), note.created)])
+        return note
 
     def _check_parent(self, note_id: str, parent: str) -> None:
         """A list can sit in a group, but never inside itself."""
@@ -594,9 +606,9 @@ class Engine:
         return self.update_note(note_id, body=edit(row["body"] or ""))
 
     def add_to_list(self, note_id: str, text: str, remind: str | None = None,
-                    section: str | None = None) -> dict:
+                    section: str | None = None, repeat: str | None = None) -> dict:
         return self._body_change(note_id, lambda body: CL.add_item(
-            body, text, section=section, remind=remind))
+            body, text, section=section, remind=remind, repeat=repeat))
 
     def set_item(self, note_id: str, line: int | None, text: str, remind: str | None = None,
                  due: str | None = None, repeat: str | None = None) -> dict:
@@ -905,11 +917,66 @@ class Engine:
             J.record(self.conn, "note.respace", {"ids": ids},
                      {"op": "batch", "steps": steps})
 
-    def complete(self, note_id: str, done: bool = True) -> None:
+    def complete(self, note_id: str, done: bool = True) -> dict:
+        """Tick or untick. Something that repeats isn't finished by a tick: it
+        moves on to its next time. Returns {"next": time} when it did."""
+        from . import reminders as Rem
+        out: dict = {}
+
         def change(note: Note) -> None:
-            note.status = "done" if done else "open"
+            rule = Rem.parse_rule(note.repeat) if done and note.repeat else None
+            when = note.due or note.remind
+            if rule and when:
+                base = datetime.fromisoformat(when[:19])
+                nxt = Rem.next_after(base, rule, max(base, datetime.now()))
+                stamp = nxt.strftime("%Y-%m-%dT%H:%M:%S")
+                note.due = stamp if note.due else None
+                note.remind = stamp if (note.remind or not note.due) else None
+                note.status = "open"
+                out["next"] = stamp
+            else:
+                note.status = "done" if done else "open"
             note.updated = now_iso()
         self._rewrite(note_id, change, "note.complete")
+        return out
+
+    def advance_repeats(self, now: datetime | None = None) -> int:
+        """Bring repeating things round: ticked repeating items whose next turn
+        has come, and repeating lists at the start of each round. These happen
+        by themselves, so they aren't undo steps. Returns how many notes changed."""
+        from . import reminders as Rem
+        now = now or datetime.now()
+        changed = 0
+        for row in self.conn.execute(
+                "SELECT id, body FROM notes WHERE body LIKE '%🔁%' AND status <> 'archived'").fetchall():
+            new = Rem.roll_items(row["body"] or "", now.date())
+            if new != (row["body"] or ""):
+                self._roll(row["id"], new)
+                changed += 1
+        seen = Rem.fired(self.conn)
+        for row in N.lists(self.conn):
+            rule = Rem.parse_rule(row["repeat"])
+            if rule is None or row["status"] == "archived":
+                continue
+            key = Rem.reset_key(row["id"], rule, now, row["created_at"])
+            if key in seen:
+                continue
+            body = N.get(self.conn, row["id"])["body"] or ""
+            new = CL.reset(body)
+            if new != body:
+                self._roll(row["id"], new)
+                changed += 1
+            Rem.mark(self.conn, [key])
+        return changed
+
+    def _roll(self, note_id: str, body: str) -> None:
+        """Write a body the app changed by itself on schedule."""
+        row = N.get(self.conn, note_id)
+        note = self.vault.read(row["path"])
+        note.body = body
+        with transaction(self.conn):
+            self.vault.write(note, row["path"])
+            N.upsert(self.conn, note, row["path"], needs_review=bool(row["needs_review"]))
 
     # ---------------------------------------------------------- blank notes --
     def create_note(self, title: str = "Untitled", body: str = "",

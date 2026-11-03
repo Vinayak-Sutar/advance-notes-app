@@ -250,8 +250,18 @@ writes them; the page mirrors those rules, and so do the capture box's chips.
   group. The page polls `/api/due` and shows a card for each kind; `/api/agenda`
   feeds Today (what needs you today, and each list's pace) and the Reminders
   page (by day, plus undated to-dos). A rebuild marks what's already past.
-- **Not yet:** alerts appear only while a page is open (roadmap step 6), and
-  groups and repeating are step 5.
+- **Repeats** are words, the same in a header and on an item's 🔁: daily,
+  weekdays, weekly, monthly, yearly, "every 2 weeks". `intent.py` reads them
+  only from timed things, so ordinary writing keeps its words. Ticking a
+  repeating reminder moves it to its next time rather than finishing it.
+  Ticked repeating items come back unticked, with their dates moved on, once
+  their next turn starts, and a repeating list unticks itself each round
+  (today, from Monday, from the 1st). `engine.advance_repeats()` does both when
+  the page polls and at startup; a key per round in `reminder_log` stops it
+  happening twice, and a rebuild marks the current rounds.
+- **Groups:** a list's `parent` puts it in a group. The group's progress and
+  check-in cover its lists, and the To-do lists page nests them.
+- **Not yet:** alerts appear only while a page is open (roadmap step 6).
 
 ## Links (`mnemo/links.py`)
 

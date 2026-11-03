@@ -24,7 +24,8 @@ What gets built next, in order. Wider ideas live in
    a note, Personal notes keeps its own links, and on a phone Links is in the menu.
 4. **Reminders and check-ins.** Done 2026-11-03: item reminders, daily
    check-ins with pause, deadline nudges, and the Today and Reminders pages.
-5. **Groups and repeating.** Lists inside lists; things that repeat.
+5. **Groups and repeating.** Done 2026-11-04: repeating reminders, items and
+   lists, and lists grouped inside lists.
 6. **Reminders with the page closed.** On the laptop first, and fix the server's
    occasional exit with code 4. On a phone this needs the secure link below.
 

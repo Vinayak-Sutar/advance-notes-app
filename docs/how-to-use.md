@@ -21,6 +21,9 @@ On your phone, tap **＋**. Your keyboard's mic button works there too.
 - The bell beside an item sets a reminder for it, shown as a small chip.
 - A list with a deadline checks in once a day with how it's going. Tap its check-in chip to change the time, pause it or turn it off, or say **don't remind me about exam prep until monday**.
 - In the box or in chat, say **add optics to the exam prep list**.
+- Things can repeat: say **remind me to water the plants every monday 9am**. Ticking it moves it on to next time instead of finishing it.
+- A list can start over, unticked, every day, week or month, and an item can repeat on its own: tap its bell.
+- Lists can sit in a group: tap **Put in a group** on a list. The group shows its lists and their combined progress, and checks in for all of them.
 
 ## Finding things
 

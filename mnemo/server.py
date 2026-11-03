@@ -702,8 +702,14 @@ class Handler(BaseHTTPRequestHandler):
             brief["links"] = [t for t in L.Links(engine.vault.root).tiles(conn, note_id)
                               if t["notes"][0]["how"] == "in"]
             brief["topics"] = [T.path_of(conn, t) for t in N.topics_of(conn, note_id)]
+            brief["repeat"] = N.meta(conn, note_id)["repeat"]
             if row["kind"] == "list" or brief.get("progress"):
                 brief["list"] = _list_info(conn, row)
+                parent = N.get(conn, brief["list"]["parent"]) if brief["list"]["parent"] else None
+                brief["parentTitle"] = parent["title"] if parent else None
+                brief["childLists"] = [dict(_note_brief(conn, kid), list=_list_info(conn, kid))
+                                       for kid in (N.get(conn, k) for k in brief["list"]["children"])
+                                       if kid is not None]
             return self._json(brief)
 
         if route == "/api/personal":
@@ -753,11 +759,13 @@ class Handler(BaseHTTPRequestHandler):
                 for c in candidates[:3] if c.similarity > 0]})
 
         if route == "/api/agenda":
+            engine.advance_repeats()
             rows = N.agenda(conn)
             anytime = conn.execute(
                 "SELECT n.* FROM notes n WHERE n.kind = 'task' AND n.due_at IS NULL AND n.status = 'open'"
                 f" ORDER BY {N.ORDER}").fetchall()
-            return self._json({"notes": [_note_brief(conn, r) for r in rows],
+            return self._json({"notes": [dict(_note_brief(conn, r), repeat=N.meta(conn, r["id"])["repeat"])
+                                         for r in rows],
                                "items": Rem.agenda_items(conn), "lists": Rem.active_lists(conn),
                                "anytime": [_note_brief(conn, r) for r in anytime]})
 
@@ -765,11 +773,13 @@ class Handler(BaseHTTPRequestHandler):
             # Polled by the page so a reminder can surface while it is open.
             # Reminder times are wall-clock local time, so compare with local
             # now -- UTC here made reminders fire hours late east of Greenwich.
+            # Repeating things come round first, so their reminders can ring.
+            rolled = engine.advance_repeats()
             reminders = Rem.due_now(conn)
             for r in reminders:
                 if r["type"] == "task":
                     r["topic"] = T.path_of(conn, N.primary_topic(conn, r["noteId"]))
-            return self._json({"reminders": reminders})
+            return self._json({"reminders": reminders, "rolled": rolled})
 
         if route == "/api/resolve":
             phrase = (query.get("q") or [""])[0]
@@ -931,8 +941,8 @@ class Handler(BaseHTTPRequestHandler):
         if route == "/api/note/complete":
             if N.get(conn, payload.get("id") or "") is None:
                 return self._json({"error": "not found"}, 404)
-            engine.complete(payload["id"], payload.get("done", True))
-            return self._json({"ok": True})
+            moved = engine.complete(payload["id"], payload.get("done", True))
+            return self._json({"ok": True, "next": moved.get("next")})
 
         if route == "/api/note/new":
             return self._json(engine.create_note(
@@ -1139,6 +1149,8 @@ def serve(vault: str | Path = DEFAULT_VAULT, port: int = 7777, host: str = "127.
     _engine = next(iter(_rooms.values())).engine if _rooms else Engine(vault, online=online)
     if profiles:
         threading.Thread(target=_daily_backup, args=(profiles[0],), daemon=True).start()
+    for engine in _open_engines():
+        engine.advance_repeats()            # anything that came round while Notes was off
 
     url = f"http://{'127.0.0.1' if lan else host}:{port}/"
     print(f"  mnemo  {url}")

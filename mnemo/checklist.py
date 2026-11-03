@@ -194,10 +194,11 @@ def reset(body: str) -> str:
 
 
 def add_item(body: str, text: str, section: str | None = None,
-             remind: str | None = None, due: str | None = None) -> str:
+             remind: str | None = None, due: str | None = None,
+             repeat: str | None = None) -> str:
     """Add '- [ ] text' after the last item of `section` (or of the list)."""
     new = format_item(Item(line=-1, indent="", text=text.strip(), done=False,
-                           remind=remind, due=due))
+                           remind=remind, due=due, repeat=repeat))
     lines = (body or "").rstrip("\n").split("\n") if (body or "").strip() else []
     parsed = parse("\n".join(lines))
     target = None

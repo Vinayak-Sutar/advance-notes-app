@@ -8,9 +8,11 @@ returns the facts.
 """
 from __future__ import annotations
 
+import calendar
 import hashlib
 import math
-from datetime import date, datetime
+import re
+from datetime import date, datetime, time, timedelta
 
 from . import checklist as CL
 from . import notes as N
@@ -205,7 +207,122 @@ def active_lists(conn, now: datetime | None = None) -> list[dict]:
 
 
 def mark_past(conn, now: datetime | None = None) -> int:
-    """After a rebuild the log is empty: don't fire everything already past again."""
+    """After a rebuild the log is empty: don't fire everything already past
+    again, and don't reset a repeating list that's mid-round."""
+    now = now or datetime.now()
     keys = [r["key"] for r in due_now(conn, now)]
+    for row in N.lists(conn):
+        rule = parse_rule(row["repeat"])
+        if rule:
+            keys.append(reset_key(row["id"], rule, now, row["created_at"]))
     mark(conn, keys)
     return len(keys)
+
+
+# ---------------------------------------------------------------- repeats ----
+# A repeat is written in words, the same in a note's header and on an item's 🔁:
+# "daily", "weekdays", "weekly", "monthly", "yearly", "every 2 weeks".
+_SIMPLE = {"daily": ("day", 1), "every day": ("day", 1), "everyday": ("day", 1),
+           "weekdays": ("weekday", 1), "every weekday": ("weekday", 1),
+           "weekly": ("week", 1), "every week": ("week", 1), "fortnightly": ("week", 2),
+           "monthly": ("month", 1), "every month": ("month", 1),
+           "yearly": ("year", 1), "every year": ("year", 1), "annually": ("year", 1)}
+
+
+def parse_rule(text) -> tuple[str, int] | None:
+    t = " ".join(str(text or "").lower().split())
+    if t in _SIMPLE:
+        return _SIMPLE[t]
+    m = re.fullmatch(r"every (\d{1,2}|other) (day|week|month|year)s?", t)
+    if m:
+        return m.group(2), 2 if m.group(1) == "other" else max(1, int(m.group(1)))
+    if re.fullmatch(r"every (?:mon|tues|wednes|thurs|fri|satur|sun)day", t):
+        return "week", 1
+    return None
+
+
+def _add_months(when: datetime, months: int) -> datetime:
+    y, m = divmod(when.month - 1 + months, 12)
+    year, month = when.year + y, m + 1
+    return when.replace(year=year, month=month, day=min(when.day, calendar.monthrange(year, month)[1]))
+
+
+def next_after(anchor: datetime, rule, after: datetime) -> datetime:
+    """The first time the repeat comes round after `after`, counted from
+    `anchor` so a monthly thing on the 31st stays on the last day."""
+    unit, n = rule
+    when, k = anchor, 0
+    while when <= after and k < 10000:
+        k += 1
+        if unit == "weekday":
+            when += timedelta(days=1)
+            while when.weekday() >= 5:
+                when += timedelta(days=1)
+        elif unit in ("day", "week"):
+            when = anchor + timedelta(days=k * n * (7 if unit == "week" else 1))
+        else:
+            when = _add_months(anchor, k * n * (12 if unit == "year" else 1))
+    return when
+
+
+def period_start(rule, now: datetime, anchor=None) -> datetime:
+    """When the current round of a repeating list began: today, this week
+    (from Monday), this month or this year. "Every 2 weeks" counts from the
+    day the list was made."""
+    unit, n = rule
+    today = datetime(now.year, now.month, now.day)
+    if unit == "weekday":
+        while today.weekday() >= 5:
+            today -= timedelta(days=1)
+        return today
+    if n > 1 and anchor:
+        start = datetime.fromisoformat(str(anchor).replace("Z", "")[:19])
+        start = datetime(start.year, start.month, start.day)
+        if unit == "week":
+            start -= timedelta(days=start.weekday())
+        last = start
+        while True:
+            nxt = next_after(start, rule, last)
+            if nxt > now:
+                return last
+            last = nxt
+    if unit == "day":
+        return today
+    if unit == "week":
+        return today - timedelta(days=today.weekday())
+    if unit == "month":
+        return today.replace(day=1)
+    return today.replace(month=1, day=1)
+
+
+def reset_key(note_id: str, rule, now: datetime, anchor=None) -> str:
+    return f"reset:{note_id}:{period_start(rule, now, anchor).date().isoformat()}"
+
+
+def roll_items(body: str, today: date) -> str:
+    """Bring ticked repeating items round again once their next turn has come:
+    unticked, with their date and reminder moved on."""
+    lines = (body or "").split("\n")
+    changed = False
+    for it in CL.parse(body or "").items:
+        rule = parse_rule(it.repeat) if it.done and it.repeat else None
+        if rule is None:
+            continue
+        done_day = _day(it.done_on) or today
+        if it.remind or it.due:
+            anchor = datetime.fromisoformat(it.remind or f"{it.due}T00:00:00")
+            nxt = next_after(anchor, rule, max(anchor, datetime.combine(done_day, time(23, 59))))
+            if today < nxt.date():
+                continue
+            shift = nxt.date() - anchor.date()
+            if it.remind:
+                it.remind = nxt.strftime("%Y-%m-%dT%H:%M:%S")
+            if it.due:
+                it.due = (date.fromisoformat(it.due) + shift).isoformat()
+        elif today < next_after(datetime.combine(done_day, time()), rule,
+                                datetime.combine(done_day, time())).date():
+            continue
+        it.done, it.done_on = False, None
+        lines[it.line] = CL.format_item(it)
+        changed = True
+    return "\n".join(lines) if changed else body
