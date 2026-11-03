@@ -31,6 +31,17 @@ On your phone, tap **＋**. Your keyboard's mic button works there too.
 - **List** or **Tiles** switches how notes look. Drag tiles into your own order.
 - On your phone, the magnifier at the top searches, and the round button next to it opens everything else.
 
+## Links
+
+Every link in your notes shows on the **Links** page as a tile with its picture and title, whether you pasted it on its own or wrote it inside a note. A link that's in several notes is one tile.
+
+- Tap a tile to open the link, or **⋯** to see which notes it's in.
+- Paste a link in the box at the top of the page to save it, with a line about why if you like.
+- Drag tiles into your own order. Filter by site, type or collection, or search.
+- A note shows the links written in it at the bottom.
+
+Pictures and titles are fetched once from each link's own site and kept. Links that may need your account, like Google Docs, are never fetched.
+
 ## Writing in a note
 
 Click a line and type. Markdown works: `## heading`, `- list`, `- [ ] to-do`.

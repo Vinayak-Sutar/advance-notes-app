@@ -34,6 +34,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 from . import checklist as CL
 from . import devices as D
 from . import gardener as Gd
+from . import links as L
 from . import notes as N
 from . import reminders as Rem
 from . import search as S
@@ -97,6 +98,7 @@ _devices: D.Devices | None = None # only with `--lan`
 _chat_model = None                # factory for the chat model; tests swap in a fake
 _note_ai_model = None             # same, for the AI box inside a note
 _web_searcher = None              # (query, WebConfig) -> results; tests swap in a fake
+_link_preview = None              # url -> preview dict; tests swap in a fake
 
 
 def _room_for(profile_id: str | None) -> Room:
@@ -434,6 +436,11 @@ class Handler(BaseHTTPRequestHandler):
             return self._manifest()
         if route.startswith("/personal-file/"):
             return self._personal_file(route[len("/personal-file/"):])
+        if route.startswith("/link-thumb/"):
+            got = L.Links(self.engine.vault.root).thumb(unquote(route[len("/link-thumb/"):]))
+            if got is None:
+                return self._json({"error": "not found"}, 404)
+            return self._send(200, got[0], got[1])
         if route.startswith("/static/"):
             return self._static(route[len("/static/"):])
         if route.startswith("/media/"):
@@ -476,6 +483,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json({"error": f"{type(exc).__name__}: {exc}"}, 500)
         if route == "/api/note/ai":
             return self._note_ai(payload)   # no lock while the model thinks
+        if route == "/api/links/fetch":
+            return self._links_fetch(payload)   # the network, never under the lock
         if route == "/api/web/test":
             return self._web_test(payload)  # network only, no notes involved
         if route == "/api/profile/new":
@@ -608,6 +617,22 @@ class Handler(BaseHTTPRequestHandler):
         return self._json(_profiles_payload(_rooms[profile.id]),
                           headers=(("Set-Cookie", _profile_cookie(profile.id)),))
 
+    def _links_fetch(self, payload: dict) -> None:
+        """Fetch a few missing link previews: the page asks again while some are left."""
+        links = L.Links(self.engine.vault.root)
+        with self.lock:
+            todo = links.missing(links.tiles(self.engine.conn))
+        batch = todo[:max(1, min(int(payload.get("max") or 3), 6))]
+        done = []
+        for tile in batch:
+            got = links.fetch(tile, _link_preview or L.preview)
+            done.append({"key": tile["key"], **got})
+            if got.get("status") == "offline":
+                break                       # no connection: stop, and try later
+        offline = any(d.get("status") == "offline" for d in done)
+        return self._json({"done": done, "left": 0 if offline else len(todo) - len(done),
+                           "offline": offline})
+
     def _web_test(self, payload: dict) -> None:
         """Settings > Web search > Test: one real search with the chosen setup."""
         cfg = Web.WebConfig.from_payload(payload.get("web"))
@@ -673,6 +698,9 @@ class Handler(BaseHTTPRequestHandler):
             brief.update(_note_parts(row))
             brief["source"] = row["source_url"]
             brief["related"] = [_note_brief(conn, r) for r in N.related(conn, note_id)]
+            # Links written in it; a link note's own address already shows as its card.
+            brief["links"] = [t for t in L.Links(engine.vault.root).tiles(conn, note_id)
+                              if t["notes"][0]["how"] == "in"]
             brief["topics"] = [T.path_of(conn, t) for t in N.topics_of(conn, note_id)]
             if row["kind"] == "list" or brief.get("progress"):
                 brief["list"] = _list_info(conn, row)
@@ -689,6 +717,10 @@ class Handler(BaseHTTPRequestHandler):
             text = Personal(engine.vault.root).reveal((query.get("id") or [""])[0])
             return self._json({"text": text}) if text is not None \
                 else self._json({"error": "not found"}, 404)
+
+        if route == "/api/links":
+            links = L.Links(engine.vault.root)
+            return self._json({"links": links.tiles(conn)})
 
         if route == "/api/lists":
             rows = N.lists(conn)
@@ -848,6 +880,13 @@ class Handler(BaseHTTPRequestHandler):
             engine.update_note(row["id"], body=_rejoin(row, user))
             done, total = CL.progress(user)
             return self._json({"ok": True, "progress": [done, total]})
+
+        if route == "/api/links/layout":
+            links = L.Links(engine.vault.root)
+            order = payload.get("order")
+            links.set_layout(order if isinstance(order, list) else [],
+                             {t["key"] for t in links.tiles(conn)})
+            return self._json({"ok": True})
 
         if route == "/api/personal/layout":
             order = payload.get("order")

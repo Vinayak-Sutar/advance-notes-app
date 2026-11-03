@@ -1002,6 +1002,19 @@ a.src-chip{text-decoration:none;color:inherit;max-width:240px}
 .a-line b{color:var(--text);font-weight:600}
 .more-link{display:flex;align-items:center;gap:6px;margin:12px 12px 4px;font-size:13px;font-weight:600;color:var(--accent-ink)}
 .more-link:hover{text-decoration:underline}
+/* Links */
+.l-add{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 14px}
+.l-add .input{flex:1 1 240px;min-width:0}
+.l-in{margin:18px 0 8px;font:650 13px/1.3 var(--font-display);color:var(--muted)}
+.l-notes{display:flex;flex-direction:column;gap:6px}
+.l-note{display:flex;align-items:center;gap:8px;width:100%;min-height:40px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);text-align:left;font-size:13.5px}
+.l-note:hover{border-color:var(--border-strong)}
+.l-note .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.l-note .hint{flex:none;font-size:12px;color:var(--muted)}
+.p-tile-foot>span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.note-links{margin-top:28px}
+.note-links .p-tiles{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));margin-top:10px}
+
 /* To-do lists */
 .list-box{margin:4px 0 14px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface-2)}
 .lb-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
@@ -1404,6 +1417,9 @@ const api = {
   profiles: () => LIVE ? httpGet('/api/profiles') : Promise.resolve({ profiles: [], current: null }),
   useProfile: (id) => httpPost('/api/profile', { id }),
   newProfile: (name) => httpPost('/api/profile/new', { name }),
+  links: () => LIVE ? httpGet('/api/links') : Promise.resolve({ links: [] }),
+  linksFetch: () => httpPost('/api/links/fetch', { max: 3 }),
+  linksLayout: (order) => httpPost('/api/links/layout', { order }),
   personal: () => LIVE ? httpGet('/api/personal') : Promise.resolve({ sources: [], links: [], lists: {} }),
   personalMessages: (source) => httpGet('/api/personal/messages', { source }),
   personalReveal: (id) => httpGet('/api/personal/reveal', { id }),
@@ -2533,7 +2549,7 @@ function sw(path) {
   }
   return 'sw-' + S.colors[top];
 }
-function isWide(v) { return ['map', 'tidy', 'settings', 'personal'].includes(v.type); }
+function isWide(v) { return ['map', 'tidy', 'settings', 'personal', 'links'].includes(v.type); }
 function isText(el) { return el && (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && !['checkbox', 'radio', 'button'].includes(el.type)) || el.isContentEditable); }
 
 function setWorking(d) { S.working = Math.max(0, S.working + d); $('#working').classList.toggle('off', S.working === 0); }
@@ -2695,6 +2711,7 @@ async function endPull(go) {
   try {
     await refresh();
     if (S.view.type === 'personal') { P.data = null; P.msgs.clear(); await renderWide(); }
+    if (S.view.type === 'links') { LK.data = null; await renderWide(); }
   } finally { el.classList.remove('spin'); el.style.opacity = 0; el.style.transform = ''; }
 }
 function hideBoot() { const b = $('#boot'); if (!b) return; b.classList.add('gone'); setTimeout(() => b.remove(), 250); }
@@ -2812,6 +2829,7 @@ function renderSidebar() {
     ${nav('all', 'All notes', 'notes', total || '')}
     ${nav('inbox', 'Inbox', 'inbox', st.inbox || '')}
     ${nav('lists', 'To-do lists', 'task')}
+    ${nav('links', 'Links', 'link')}
     ${nav('personal', 'Personal notes', 'bookmark')}
     ${v.type === 'personal' && P.data && !S.sbCollapsed ? `<ul class="views">${P.data.sources.map((s) => `<li><button class="view-item" data-act="p-go" data-path="${esc(pathFromView({ source: s.source }))}" ${v.source === s.source ? 'aria-current="page"' : ''}>${esc(s.name)}</button></li>`).join('')}<li><button class="view-item" data-act="p-go" data-path="/personal-notes/links">All links</button></li><li><button class="view-item" data-act="p-go" data-path="/personal-notes/lists">Lists</button></li></ul>` : ''}
     <div class="sb-label" id="collLabel"><span>Collections</span></div>
@@ -3566,6 +3584,7 @@ function noteHTML(n) {
     ${(n.kind === 'image' || n.source) ? '<div class="body-label" id="bodyLabel">Your notes</div>' : ''}
     <div class="md-body" id="mdBody" tabindex="0" role="group" aria-label="Note body. Press Enter to edit."></div>
     ${n.kind === 'list' ? '<div class="list-foot" id="listFoot"></div>' : ''}
+    ${(n.links || []).length ? `<section class="note-links" aria-labelledby="nlTitle"><div class="connects-head">${icon('link', 17)}<h3 id="nlTitle">Links in this note</h3><span class="badge">${n.links.length}</span></div><div class="p-tiles">${n.links.map((l) => lTileHTML(l, { compact: true })).join('')}</div></section>` : ''}
     <section class="connects" aria-labelledby="connTitle">
       <div class="connects-head">${icon('graph', 17)}<h3 id="connTitle">Connects to</h3>${rel.length ? `<span class="badge">${rel.length}</span>` : ''}</div>
       ${rel.length ? `<div class="rel-grid">${rel.map((r) => `<button class="rel-card ${sw(r.topic)}" data-act="open-note" data-id="${esc(r.id)}">
@@ -3706,6 +3725,7 @@ async function renderWide() {
   const el = $('#detail'), v = S.view;
   el.classList.remove('has-dock');
   if (v.type === 'personal') return renderPersonal();
+  if (v.type === 'links') return renderLinks();
   if (v.type === 'settings') { el.innerHTML = settingsHTML(); return; }
   if (v.type === 'tidy') {
     el.innerHTML = `<div class="wide-wrap"><h1>Tidy up</h1><p class="lede">A few ideas to keep your collections neat. Nothing changes unless you say yes.</p><div id="tidyList"><span class="spin ink" style="display:inline-block"></span></div></div>`;
@@ -4567,6 +4587,8 @@ const ACTS = {
   'open-note': (el) => { if (el.dataset.id) openNote(el.dataset.id); },
   'p-go': (el) => goPersonal(el.dataset.path),
   'p-link': (el) => pOpenPanel(el.dataset.id),
+  'l-info': (el) => lOpenPanel(el.dataset.key),
+  'l-filter': (el) => { LK.filter.site = el.dataset.v || ''; $$('#detail [data-act="l-filter"]').forEach((b) => b.setAttribute('aria-pressed', String(b === el))); $('#lTiles').innerHTML = lTilesHTML(); },
   'p-scroll': (el) => document.getElementById(el.dataset.to)?.scrollIntoView({ block: 'start' }),
   'p-reset-order': async () => {
     const key = S.view.source || 'all';
@@ -4822,6 +4844,126 @@ function applyTheme() {
    opened directly.
    ===================================================================== */
 const PTABS = [['overview', 'Overview'], ['messages', 'Messages'], ['points', 'Points'], ['links', 'Links'], ['files', 'Files']];
+/* =====================================================================
+   Links: every link in your notes, as tiles (mnemo/links.py). One tile per
+   link, however many notes it's in; previews fill in by themselves.
+   ===================================================================== */
+const LK = { data: null, filter: {}, q: '', key: null, fetching: false };
+function lTopSites() {
+  const count = new Map();
+  for (const l of LK.data || []) count.set(l.site, (count.get(l.site) || 0) + 1);
+  return [...count.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).filter(([, n]) => n > 1).map(([s]) => s);
+}
+function lFiltered() {
+  const f = LK.filter, q = LK.q.trim().toLowerCase(), top = lTopSites();
+  return (LK.data || []).filter((l) => (!f.site || (f.site === 'Other' ? !top.includes(l.site) : l.site === f.site))
+    && (!f.kind || l.kind === f.kind) && (!f.topic || l.notes.some((n) => n.topic === f.topic))
+    && (!q || [l.title, l.caption, l.url, l.site, l.creator, ...l.notes.map((n) => n.title)].join(' ').toLowerCase().includes(q)));
+}
+function lTileHTML(l, opts = {}) {
+  const status = l.private ? 'Private link, not fetched' : l.status === 'gone' ? 'No longer available' : '';
+  const who = l.handle ? '@' + l.handle : l.creator || l.creatorName || '';
+  const where = l.notes.length === 1 ? l.notes[0].title : `${l.notes.length} notes`;
+  return `<div class="p-tile ${LK.key === l.key ? 'is-open' : ''}" data-id="${esc(l.key)}">
+    <a class="p-open" href="${esc(safeHref(l.url))}" target="_blank" rel="noopener noreferrer" draggable="false">
+    ${l.thumb ? `<img class="p-thumb" src="/link-thumb/${encodeURIComponent(l.thumb)}" alt="" loading="lazy" draggable="false">` : `<span class="p-thumb blank">${icon(l.private ? 'lock' : 'link', 24)}</span>`}
+    <span class="p-tile-body"><span class="p-tile-site"><span>${esc(l.site)} · ${pLinkKind(l)}${who ? ' · ' + esc(who) : ''}</span></span>
+      <span class="p-tile-title">${esc(status || l.title || l.url.replace(/^https?:\/\/(www\.)?/, ''))}</span>
+      ${opts.compact ? '' : `<span class="p-tile-foot"><span>${icon('notes', 11)} ${esc(where)}</span><span>${pMonth(l.saved)}</span></span>`}</span></a>
+    ${opts.compact ? '' : `<button class="p-info" data-act="l-info" data-key="${esc(l.key)}" aria-label="Details: ${esc(l.title || l.url)}" title="Details">${icon('more', 16)}</button>`}</div>`;
+}
+function lTilesHTML() {
+  const shown = lFiltered();
+  return shown.length ? shown.map((l) => lTileHTML(l)).join('') : '<div class="p-empty">No links match.</div>';
+}
+async function renderLinks() {
+  const el = $('#detail'), v = S.view;
+  hideHdr();
+  if (!LK.data) {
+    el.innerHTML = '<div class="list-empty"><span class="spin ink" style="display:inline-block"></span></div>';
+    try { LK.data = (await api.links()).links; }
+    catch { if (S.view === v) el.innerHTML = emptyHTML('link', "Couldn't load your links", 'Check that Notes is still running on your laptop.'); return; }
+  }
+  if (S.view !== v) return;
+  const all = LK.data, f = LK.filter, top = lTopSites();
+  const uniq = (fn) => [...new Set(all.flatMap(fn))].filter(Boolean).sort();
+  const pick = (name, label, values) => values.length < 2 ? '' : `<select data-lfilter="${name}" aria-label="${label}"><option value="">${label}</option>${values.map(([v, t]) => `<option value="${esc(v)}" ${f[name] === v ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>`;
+  const chips = ['', ...top, ...(top.length && all.some((l) => !top.includes(l.site)) ? ['Other'] : [])].map((k) => `<button class="p-chip" data-act="l-filter" data-v="${esc(k)}" aria-pressed="${(f.site || '') === k}">${esc(k || 'All sites')}</button>`).join('');
+  el.innerHTML = `<div class="p-page">
+    <div class="p-head"><div><h1>Links</h1><p>${all.length} link${all.length === 1 ? '' : 's'} from your notes${all.length > 1 ? ' · drag to arrange' : ''}</p></div>
+      <input class="p-search" id="lSearch" type="search" placeholder="Search your links" aria-label="Search your links" value="${esc(LK.q)}"></div>
+    <form class="l-add" id="lAdd" autocomplete="off"><input class="input" name="url" type="url" inputmode="url" placeholder="Paste a link to save it" aria-label="Link" required>
+      <input class="input" name="why" placeholder="Why you're saving it (optional)" aria-label="Why you're saving it"><button class="btn sm primary">${icon('plus', 14)}Add</button></form>
+    ${all.length ? `<div class="p-filters">${all.length > 1 ? chips : ''}${pick('kind', 'Any type', uniq((l) => [l.kind]).map((k) => [k, pLinkKind({ kind: k })]))}${pick('topic', 'Any collection', uniq((l) => l.notes.map((n) => n.topic)).map((t) => [t, topicLabel(t)]))}</div>
+      <div class="p-tiles" id="lTiles" data-arrange>${lTilesHTML()}</div>`
+      : `<div class="p-empty">No links yet. Paste one above, or into the box at the top, and it shows here. Links written inside any note show up too.</div>`}
+  </div>`;
+  $$('[data-lfilter]', el).forEach((s) => s.addEventListener('change', () => { LK.filter[s.dataset.lfilter] = s.value; $('#lTiles').innerHTML = lTilesHTML(); }));
+  $('#lSearch').addEventListener('input', (e) => { LK.q = e.target.value; $('#lTiles') && ($('#lTiles').innerHTML = lTilesHTML()); });
+  $('#lAdd').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target, url = form.url.value.trim(), why = form.why.value.trim();
+    if (!url) return;
+    try { await busy(() => api.capture(why ? `${url} ${why}` : url)); }
+    catch { toast({ icon: 'x', msg: "Couldn't save that link just now.", sw: 'sw-tangerine' }); return; }
+    toast({ icon: 'link', msg: `Saved <b>${esc(domainOf(url))}</b>`, actions: [{ label: 'Undo', act: 'undo' }] });
+    LK.data = null; await renderLinks(); softRefresh();
+  });
+  if (LK.key) lOpenPanel(LK.key);
+  lFetchPreviews();
+}
+// Previews come a few at a time, from each link's own site, while you look.
+async function lFetchPreviews() {
+  if (LK.fetching || !LIVE || !(LK.data || []).some((l) => !l.private && !l.status)) return;
+  LK.fetching = true;
+  try {
+    for (let round = 0; round < 80 && S.view.type === 'links'; round++) {
+      const r = await api.linksFetch();
+      for (const d of r.done) {
+        const l = LK.data && LK.data.find((x) => x.key === d.key); if (!l) continue;
+        Object.assign(l, d, { title: d.title || l.title });
+        const tile = $(`#lTiles .p-tile[data-id="${CSS.escape(l.key)}"]`);
+        if (tile && !tile.classList.contains('is-dragging')) tile.outerHTML = lTileHTML(l);
+      }
+      if (!r.left || r.offline || !r.done.length) break;
+    }
+  } catch {} finally { LK.fetching = false; }
+}
+function lOpenPanel(key) {
+  const l = (LK.data || []).find((x) => x.key === key); if (!l) return;
+  LK.key = key;
+  $$('.p-tile').forEach((t) => t.classList.toggle('is-open', t.dataset.id === key));
+  const who = [l.creatorName, l.handle ? '@' + l.handle : l.creator].filter(Boolean).join(' · ');
+  const rows = [['Site', `${l.site} · ${pLinkKind(l)}`], ['By', who], ['Posted', l.posted ? pDate(l.posted) : ''], ['First saved', pDate(l.saved)]].filter(([, v]) => v);
+  const status = l.private ? 'This link may need your account, so no preview was fetched.' : l.status === 'gone' ? 'This page is no longer available.' : l.status && l.status !== 'ok' ? 'No preview yet.' : '';
+  document.querySelector('.p-panel')?.remove();
+  const box = document.createElement('aside');
+  box.className = 'p-panel'; box.setAttribute('aria-label', 'Link details');
+  box.innerHTML = `<div class="top"><span>Link details</span><button class="icon-btn sm" data-act="p-close" aria-label="Close">${icon('x', 16)}</button></div>
+    ${l.thumb ? `<img src="/link-thumb/${encodeURIComponent(l.thumb)}" alt="" draggable="false">` : ''}
+    <h2>${esc(l.title || l.url)}</h2>
+    ${status ? `<p class="p-by-ai">${status}</p>` : ''}
+    ${l.caption ? `<div class="cap">${esc(l.caption)}</div>` : ''}
+    <div class="acts"><a class="btn sm primary" href="${esc(safeHref(l.url))}" target="_blank" rel="noopener noreferrer">${icon('ext', 14)}Open</a></div>
+    <h3 class="l-in">In your notes</h3>
+    <div class="l-notes">${l.notes.map((n) => `<button class="l-note ${sw(n.topic)}" data-act="open-note" data-id="${esc(n.id)}"><span class="dot" aria-hidden="true"></span><span class="t">${esc(n.title)}</span><span class="hint">${esc(n.how === 'saved' ? 'Saved here' : topicLabel(n.topic))}</span></button>`).join('')}</div>
+    <dl>${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>`;
+  document.body.appendChild(box);
+  phOpen('panel');
+}
+/* Your order: with a filter on, the tiles swap among the places they hold. */
+function lSaveArrangement(shownKeys) {
+  const shown = new Set(shownKeys);
+  let i = 0;
+  const order = LK.data.map((l) => (shown.has(l.key) ? shownKeys[i++] : l.key));
+  const pos = new Map(order.map((k, n) => [k, n]));
+  LK.data.sort((a, b) => pos.get(a.key) - pos.get(b.key));
+  busy(() => api.linksLayout(order)).catch(() => toast({ icon: 'x', msg: "Couldn't save that arrangement just now.", sw: 'sw-tangerine' }));
+}
+function tilesArranged(ids) {
+  if (S.view.type === 'links') lSaveArrangement(ids);
+  else { pSaveArrangement(ids); pRefreshReset(); }
+}
 const P = { data: null, msgs: new Map(), q: '', link: null, jump: null, pointType: '', filter: {} };
 
 function viewFromPath(path = location.pathname) {
@@ -5000,7 +5142,7 @@ function pTileDrag(item, ev) {
     },
     drop() {
       finish();
-      if (item.nextElementSibling !== home) { pSaveArrangement([...box.children].map((k) => k.dataset.id)); pRefreshReset(); }
+      if (item.nextElementSibling !== home) { tilesArranged([...box.children].map((k) => k.dataset.id)); }
     },
     cancel() { finish(); flip(box, () => box.insertBefore(item, home)); },
   };
@@ -5012,7 +5154,7 @@ function pNudgeTile(item, key) {
   const j = Math.max(0, Math.min(tiles.length - 1, i + step)); if (j === i) return;
   flip(box, () => box.insertBefore(item, j > i ? tiles[j].nextElementSibling : tiles[j]));
   item.querySelector('.p-open').focus();
-  pSaveArrangement([...box.children].map((k) => k.dataset.id)); pRefreshReset();
+  tilesArranged([...box.children].map((k) => k.dataset.id));
 }
 function pRefreshReset() {
   const key = S.view.source || 'all', btn = $('#pReset');
@@ -5020,7 +5162,7 @@ function pRefreshReset() {
 }
 function wirePersonalDrag() {
   $('#detail').addEventListener('pointerdown', (e) => {
-    if (e.button !== 0 || S.view.type !== 'personal' || e.target.closest('.p-info')) return;
+    if (e.button !== 0 || !['personal', 'links'].includes(S.view.type) || e.target.closest('.p-info')) return;
     const item = e.target.closest('.p-tiles[data-arrange] .p-tile');
     if (item) pressToDrag(e, item, pTileDrag);
   });
@@ -5065,7 +5207,7 @@ async function pOpenPanel(id) {
 }
 function pClosePanel() {
   if (phLeave('panel')) return;
-  P.link = null; document.querySelector('.p-panel')?.remove(); $$('.p-tile.is-open').forEach((t) => t.classList.remove('is-open'));
+  P.link = null; LK.key = null; document.querySelector('.p-panel')?.remove(); $$('.p-tile.is-open').forEach((t) => t.classList.remove('is-open'));
 }
 
 function pMsgHTML(m, source, links) {

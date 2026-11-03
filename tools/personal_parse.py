@@ -31,6 +31,7 @@ from urllib.parse import parse_qsl, urlencode, urlparse
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from mnemo.links import PRIVATE_LINK_HOSTS, TRACKING, clean_url, link_info  # noqa: E402,F401
 from mnemo.paths import DEFAULT_VAULT, PROFILES_DIR  # noqa: E402
 
 # The first profile, or --profile=<id> for another.
@@ -44,13 +45,6 @@ BARE = re.compile(r"(?<![\w@/.-])((?:[a-z0-9-]+\.)+(?:com|io|dev|ai|gg|co|xyz|ap
 FILE_ATTACHED = re.compile(r"^(.+?) \(file attached\)$", re.M)
 EDITED = "<This message was edited>"
 MOMENT_GAP = 600       # seconds between messages that still belong to one thought
-
-# Query parts that only track who shared what.
-TRACKING = re.compile(r"^(utm_.*|igsh|igshid|igsi|stkn|exln|si|feature|fbclid|gclid|ref|usp)$", re.I)
-# Never fetched for a preview: opening them may need your account, or the
-# address itself is the key.
-PRIVATE_LINK_HOSTS = ("drive.google.com", "docs.google.com", "forms.gle", "meet.google.com",
-                      "chat.whatsapp.com", "chatgpt.com", "claude.ai", "sendy.cuvette.tech", "t.me")
 
 # Checked on the message with its links taken out, except where a link is the
 # secret. Order matters only for which label is shown. Leans towards hiding.
@@ -104,60 +98,6 @@ def slug(name: str) -> str:
 
 def sha(text: str, size: int = 12) -> str:
     return hashlib.sha1(text.encode("utf-8")).hexdigest()[:size]
-
-
-def clean_url(raw: str) -> str:
-    raw = raw.rstrip(".,;:)!'\"")
-    p = urlparse(raw)
-    keep = [(k, v) for k, v in parse_qsl(p.query, keep_blank_values=True) if not TRACKING.match(k)]
-    host = p.netloc.lower()
-    return p._replace(netloc=host, query=urlencode(keep), fragment="").geturl()
-
-
-def link_info(url: str) -> dict:
-    """What a link is, from the address alone: its site, type and a key that
-    matches the same post or video however it was shared."""
-    p = urlparse(url)
-    host = p.netloc.lower().removeprefix("www.")
-    if host.startswith("m."):
-        host = host[2:]
-    path = p.path.rstrip("/")
-    parts = [x for x in path.split("/") if x]
-    query = dict(parse_qsl(p.query))
-    info = {"site": host, "kind": "page", "key": host + path}
-    if host == "instagram.com":
-        info["site"] = "Instagram"
-        if parts and parts[0] in ("reel", "reels", "p", "tv") and len(parts) > 1:
-            info.update(kind="reel" if parts[0] != "p" else "post", key="ig:" + parts[1],
-                        url=f"https://www.instagram.com/{'reel' if parts[0] != 'p' else 'p'}/{parts[1]}/")
-        elif parts:
-            info.update(kind="profile", key="ig:@" + parts[0], handle=parts[0],
-                        url=f"https://www.instagram.com/{parts[0]}/")
-    elif host in ("youtube.com", "youtu.be", "music.youtube.com"):
-        info["site"] = "YouTube"
-        vid = parts[0] if host == "youtu.be" and parts else query.get("v")
-        if parts and parts[0] in ("shorts", "live") and len(parts) > 1:
-            vid = parts[1]
-            info["kind"] = "short" if parts[0] == "shorts" else "live"
-        else:
-            info["kind"] = "video"
-        if vid:
-            info.update(key="yt:" + vid, url=f"https://www.youtube.com/watch?v={vid}")
-    elif host == "docs.google.com":
-        info.update(site="Google Docs", kind={"spreadsheets": "sheet", "presentation": "slides",
-                                              "forms": "form"}.get(parts[0] if parts else "", "doc"))
-    elif host == "drive.google.com":
-        info.update(site="Google Drive", kind="drive")
-    elif host == "forms.gle":
-        info.update(site="Google Forms", kind="form")
-    elif host in ("linkedin.com", "lnkd.in"):
-        info["site"] = "LinkedIn"
-    elif host == "github.com" or host.endswith(".github.io"):
-        info.update(site="GitHub", kind="code")
-    elif host == "maps.app.goo.gl":
-        info.update(site="Google Maps", kind="place")
-    info["private"] = any(h == host or host.endswith("." + h) for h in PRIVATE_LINK_HOSTS)
-    return info
 
 
 def read_lines(path: Path) -> tuple[list[dict], list[str], int]:

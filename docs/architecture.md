@@ -253,6 +253,22 @@ writes them; the page mirrors those rules, and so do the capture box's chips.
 - **Not yet:** alerts appear only while a page is open (roadmap step 6), and
   groups and repeating are step 5.
 
+## Links (`mnemo/links.py`)
+
+The Links page is a view over the notes, worked out each time, so there's
+nothing to keep in step: every link note's address, plus every web address
+written in any note (only the part you wrote, never a link note's fetched page
+text). Links are cleaned of tracking codes and keyed so the same video or post
+shared two ways is one tile, which lists every note it's in.
+
+Kept beside the notes, in the profile's `.mnemo/links/`: `previews.json` (each
+link's title, caption and creator, fetched once), `thumbs/`, and `layout.json`
+(your tile order; links saved since come first). The page asks
+`/api/links/fetch` for a few missing previews at a time; that runs outside the
+database lock. Only the link's own site is contacted, never a local address,
+and links that may need an account (Drive, Docs, invites) are never fetched.
+The same code serves the Personal notes tools, so there's one implementation.
+
 ## Phones over Wi-Fi
 
 `start-notes.bat` runs `python -m mnemo serve --lan`. Plain `serve` stays on
@@ -294,6 +310,7 @@ notifications; Copy falls back to the old copy command.
 |---|---|
 | `web/app.html` | The whole page: layout, editor, chat, settings, the 17 built-in fonts |
 | `server.py` | Serves the page and the `/api/...` endpoints; this computer and paired devices only |
+| `links.py` | Links as tiles: finding, cleaning and previewing links |
 | `devices.py`, `qr.py` | Pairing phones over Wi-Fi; the QR code, drawn with no library |
 | `engine.py` | Saving, filing, editing, moving, deleting, undo, Tidy up actions |
 | `profiles.py` | The list of profiles, first-time setup, daily backups |

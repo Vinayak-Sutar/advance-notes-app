@@ -20,7 +20,8 @@ What gets built next, in order. Wider ideas live in
    reserving the address in the router.
 2. **Finish to-do lists.** Done 2026-11-03: the To-do lists page, the list
    layout, capture chips, and lists in chat.
-3. **Links, as tiles.** See below.
+3. **Links, as tiles.** Done 2026-11-04, as designed below: a pasted link stays
+   a note, Personal notes keeps its own links, and on a phone Links is in the menu.
 4. **Reminders and check-ins.** Done 2026-11-03: item reminders, daily
    check-ins with pause, deadline nudges, and the Today and Reminders pages.
 5. **Groups and repeating.** Lists inside lists; things that repeat.
